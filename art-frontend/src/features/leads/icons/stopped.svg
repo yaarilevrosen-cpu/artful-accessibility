@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Stopped</title>
+    <g id="Stopped" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Organization-/-Status-/-error--filled-/-16">
+            <path d="M8,1 C4.1,1 1,4.1 1,8 C1,11.9 4.1,15 8,15 C11.9,15 15,11.9 15,8 C15,4.1 11.9,1 8,1 Z M10.7,11.5 L4.5,5.3 L5.3,4.5 L11.5,10.7 L10.7,11.5 Z" id="Fill" fill="#DA1E28"></path>
+            <polygon id="Inner-Fill" fill="#000000" opacity="0" points="10.7 11.5 4.5 5.3 5.3 4.5 11.5 10.7"></polygon>
+        </g>
+    </g>
+</svg>

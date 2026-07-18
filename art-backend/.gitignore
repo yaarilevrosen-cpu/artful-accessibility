@@ -1,0 +1,6 @@
+node_modules
+
+/src/camera/detected_frames/
+/src/camera/frames/
+/src/camera/frames/*
+/package-lock.json

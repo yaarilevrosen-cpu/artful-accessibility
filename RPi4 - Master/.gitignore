@@ -1,0 +1,22 @@
+# Ignore all .txt files
+*.txt
+*.log
+# Ignore specific file
+config.json
+.venv
+.my-venv
+# Ignore a directory
+/logs/
+system_data.json
+# Ignore everything in a directory except a specific file
+/config/*
+!/config/settings.json
+
+# Ignore compiled Python files
+*.pyc
+__pycache__/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+vscode.deb

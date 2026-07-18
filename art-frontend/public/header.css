@@ -1,0 +1,24 @@
+
+/* header.css */
+
+/* Styles for the header */
+header {
+  display: flex;
+  align-items: center;
+  background-color: #000; /* Black background for contrast */
+  color: #fff; /* White text color */
+  padding: 10px;
+  font-family: Arial, sans-serif; /* Default font */
+}
+
+/* Logo inside the header */
+header img {
+  height: 50px; /* Adjust height as needed */
+  margin-right: 10px; /* Space between the logo and the text */
+}
+
+/* Title inside the header */
+header h1 {
+  margin: 0; /* Remove default margin */
+  font-size: 24px; /* Font size for the title */
+}

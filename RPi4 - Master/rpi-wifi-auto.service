@@ -1,0 +1,18 @@
+[Unit]
+Description=Raspberry Pi 4 - Automatic WiFi Configuration
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/artful-accessibility
+ExecStart=/usr/bin/python3 /opt/artful-accessibility/rpi_wifi_auto.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
