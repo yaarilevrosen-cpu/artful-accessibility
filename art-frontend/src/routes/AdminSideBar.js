@@ -3,6 +3,7 @@ import ChartBarIcon from '@heroicons/react/24/outline/ChartBarIcon'
 import  QuestionMarkCircleIcon  from '@heroicons/react/24/outline/QuestionMarkCircleIcon'; // Import Help Icon
 import InboxArrowDownIcon from '@heroicons/react/24/outline/InboxArrowDownIcon'
 import HomeIcon  from '@heroicons/react/24/outline/HomeIcon';
+import VideoCameraIcon from '@heroicons/react/24/outline/VideoCameraIcon';
 import { ArchiveBoxIcon } from '@heroicons/react/24/outline';
 import { PresentationChartLineIcon } from '@heroicons/react/24/outline';
 
@@ -36,6 +37,11 @@ const AdminSidebar = [
         name: 'History',
       },   
     ]
+   },
+   {
+    path: '/admin/LiveDetection', // url
+    icon: <VideoCameraIcon className={iconClasses}/>, // icon component
+    name: 'Live Detection', // name that appear in Sidebar
    },
    {    path: '/admin/HelpAdmin', // url
     icon: <QuestionMarkCircleIcon className={iconClasses} />, // icon component

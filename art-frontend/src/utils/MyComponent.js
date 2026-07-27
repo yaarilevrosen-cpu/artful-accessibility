@@ -2,7 +2,7 @@ import React from 'react';
 import useWebSocketHook from './useWebSocketHook';
 
 const MyComponent = () => {
-    const socketUrl = 'ws://127.0.0.1:3001';
+    const socketUrl = 'ws://192.168.68.133:3001';
     const { messages, connectionStatus, isLoading,lastMessage } = useWebSocketHook();
         console.log(messages)
     return (

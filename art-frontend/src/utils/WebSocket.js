@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import useWebSocket from 'react-use-websocket';
 
 const WebSocket = () => {
-    const [socketUrl] = useState('ws://127.0.0.1:3001');
+    const [socketUrl] = useState('ws://192.168.68.133:3001');
     const [messageHistory, setMessageHistory] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
 

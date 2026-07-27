@@ -30,13 +30,9 @@ const sleep = (ms) =>
 class MQTTService extends IMQTTService {
     constructor() {
         super();
-        this.mqttClient = mqtt.connect('mqtt://test.mosquitto.org', {
-            // username: "art",
-            // password: "art123",
-            // clientId: "art_backend111",
-            port: 1883,
-            protocol: 'mqtt',
-        });
+        this.mqttClient = mqtt.connect('mqtt://192.168.68.133', {
+    port: 1883,
+});
         this.paintingStatusMap = new Map(); // Map to hold painting status for each sys_id
         const asyncClient = new AsyncClient(this.mqttClient);
         this.installationCallbacks = new Map();

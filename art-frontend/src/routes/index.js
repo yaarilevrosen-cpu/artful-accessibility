@@ -9,6 +9,7 @@ const WelcomeW = lazy(() => import('../pages/protected/WelcomeW'))
 const HelpAdmin = lazy(() => import('../pages/protected/HelpAdmin'))
 const HelpWorker = lazy(() => import('../pages/protected/HelpWorker'))
 const History=lazy(() => import('../pages/protected/history'))
+const LiveDetection = lazy(() => import('../pages/protected/LiveDetection'))
 
 const routes = [
  
@@ -32,6 +33,11 @@ const routes = [
     {
       path: '/History',
       component: History,
+    },
+
+    {
+      path: '/LiveDetection',
+      component: LiveDetection,
     },
    
     // Worker routes

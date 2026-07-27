@@ -3,6 +3,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const chalk = require('chalk');
 const {json} = require("express");
+const Painting = require('../models/PaintingSystem');
+const { broadcastWS } = require('../services/websocketService');
 
 // Store active camera processing states
 
@@ -14,7 +16,7 @@ class CameraProcessor {
         this.activeSystems = new Map();
         this.timeoutDuration = 16000;
         this.errorTimeoutDuration = 30000;
-        this.frameInterval = 3000;
+        this.frameInterval = 300;
         this.frameCallbacks= new Map();
         // Store promises so we can resolve/reject later
         this.cameraPromisesMap = new Map();
@@ -83,9 +85,9 @@ class CameraProcessor {
 
 
     async processCamera(sys_id, startProcessingTime = Date.now()) {
-        if (this.isTimeoutReached(startProcessingTime)) {
-            return this.handleTimeout(sys_id);
-        }
+        // Hard timeout removed by request: scanning now continues indefinitely
+        // as long as the sensor keeps reporting someone present; it only stops
+        // via the sensor's "left" event (which removes sys_id from activeSystems below).
         // Check if system was stopped
         if (!this.activeSystems.has(sys_id)) {
             console.log(chalk.yellow(`System ${sys_id} processing stopped mid-way.`));
@@ -108,8 +110,31 @@ class CameraProcessor {
 
             console.log(chalk.cyan(`System ${sys_id} - Wheelchair detection status:`, isWheelchairDetected));
 
-            if (isWheelchairDetected) {
-                return this.handleWheelchairDetected(sys_id);
+            // Continuous real-time monitoring: every frame updates the DB/UI status
+            // and the M5Stack height command, and scanning keeps going regardless of
+            // this frame's result. It only ever stops via the sensor's "left" event.
+            const heightCmd = isWheelchairDetected ? 1 : 0;
+            const wheelchairVal = isWheelchairDetected ? 2 : 0;
+            if (this.mqttClient && typeof this.mqttClient.sendHeightCommand === 'function') {
+                this.mqttClient.sendHeightCommand(sys_id, heightCmd);
+            }
+            try {
+                const painting = await Painting.findOne({ sys_id });
+                if (painting && (painting.wheelchair !== wheelchairVal || painting.height_adjust !== isWheelchairDetected)) {
+                    painting.wheelchair = wheelchairVal;
+                    painting.height_adjust = isWheelchairDetected;
+                    await painting.save();
+                }
+                let statusObj = { sensor: true, wheelchair: wheelchairVal, height_adjust: isWheelchairDetected };
+                if (this.mqttClient && this.mqttClient.paintingStatusMap && this.mqttClient.paintingStatusMap.has(sys_id)) {
+                    const existing = this.mqttClient.paintingStatusMap.get(sys_id);
+                    existing.wheelchair = wheelchairVal;
+                    existing.height_adjust = isWheelchairDetected;
+                    statusObj = existing;
+                }
+                await broadcastWS({ sys_id, ...statusObj });
+            } catch (dbErr) {
+                console.error('Error updating wheelchair status for', sys_id, dbErr.message);
             }
 
             await this.waitForNextFrame(frameStartTime);
@@ -122,21 +147,9 @@ class CameraProcessor {
 
 
     async captureFrame(sys_id) {
-        return new Promise((resolve, reject) => {
-            // Create a callback that will be called when the frame is received
-            const frameCallback = (frameData) => {
-                resolve(frameData);
-                console.log(chalk.cyan('captureFrame callback data,'))
-            };
-
-            // Store the callback in MQTTService's frameCallbacks Map
-            this.mqttClient.registerFrameCallback(sys_id, frameCallback);
-
-            // Publish a request to get the frame
-            this.mqttClient.publishGetFrame(sys_id);
-        });
-
-
+        const axios = require('axios');
+        const response = await axios.get('http://192.168.68.133:5001/capture');
+        return response.data.image;
     }
 
     async saveFrame(sys_id, frameData) {
@@ -188,7 +201,7 @@ class CameraProcessor {
 
     async waitForNextFrame(frameStartTime) {
         const frameProcessingTime = Date.now() - frameStartTime;
-        const waitTime = Math.max(1000, this.frameInterval - frameProcessingTime);
+        const waitTime = Math.max(50, this.frameInterval - frameProcessingTime);
         await new Promise(resolve => setTimeout(resolve, waitTime));
     }
 
@@ -265,25 +278,15 @@ console.log(response)
 }
 
 async function detect_activeLearning(base64Image) {
-    try {// Read and convert image to base64
-
-        const response =
-            await axios.post('https://detect.roboflow.com/infer/workflows/wheelchair-gohwp/active-learning-lca', {
-                api_key: '2Oe0piuFz1O3lnbWZ10C',
-                inputs: {
-                    image: {
-                        type: 'base64',
-                        value: base64Image
-                    }
-                }
-            }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-        // return response.data;
-       return parse_response(response.data.outputs[0].predictions, 'active')
+    try {
+        const response = await axios.post('http://192.168.68.133:5001/detect', {
+            image: base64Image
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.data.detected;
     }
     catch (e) {
         console.log(e.message)
