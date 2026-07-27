@@ -17,6 +17,7 @@ class CameraProcessor {
         this.timeoutDuration = 16000;
         this.errorTimeoutDuration = 30000;
         this.frameInterval = 300;
+        this.maxSavedFrames = 50;   // תקרת קבצים לכל sys_id (הגנה על כרטיס ה-SD)
         this.frameCallbacks= new Map();
         // Store promises so we can resolve/reject later
         this.cameraPromisesMap = new Map();
@@ -101,11 +102,14 @@ class CameraProcessor {
             // Capture the frame - this is already a base64 string
             const base64Image = await this.captureFrame(sys_id);
 
-            // Save the original frame data if needed (you might want to decode it back to a buffer)
-            await this.saveFrame(sys_id, Buffer.from(base64Image, 'base64'));
-
-
             const isWheelchairDetected = await detect_activeLearning(base64Image);
+
+            // Frames are written to disk ONLY on a positive detection, and saveFrame
+            // enforces a rolling cap. Saving every frame forever would fill the
+            // production unit's 64GB SD card within days and wear it out early.
+            if (isWheelchairDetected) {
+                await this.saveFrame(sys_id, Buffer.from(base64Image, 'base64'));
+            }
             //const isWheelchairDetected = await mock_detect(base64Image);
 
             console.log(chalk.cyan(`System ${sys_id} - Wheelchair detection status:`, isWheelchairDetected));
@@ -158,6 +162,18 @@ class CameraProcessor {
             const filePath = path.join(folderPath, `frame_${Date.now()}.jpg`);
             await fs.mkdir(folderPath, { recursive: true });
             await fs.writeFile(filePath, frameData);
+
+            // Rolling cap: keep only the newest maxSavedFrames files per system.
+            // Filenames are frame_<ms-epoch>.jpg so lexical sort == chronological sort.
+            const files = (await fs.readdir(folderPath))
+                .filter(f => f.endsWith('.jpg'))
+                .sort();
+            if (files.length > this.maxSavedFrames) {
+                const excess = files.slice(0, files.length - this.maxSavedFrames);
+                for (const oldFile of excess) {
+                    await fs.rm(path.join(folderPath, oldFile), { force: true });
+                }
+            }
         } catch (err) {
             console.error(chalk.red(`Error saving frame for system ${sys_id}:`, err.message));
         }
