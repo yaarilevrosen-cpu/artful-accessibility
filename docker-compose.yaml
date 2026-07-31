@@ -9,6 +9,11 @@ services:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
     networks:
       - art_network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   backend:
     build:
@@ -34,6 +39,11 @@ services:
       - mosquitto
     networks:
       - art_network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   frontend:
     build:
@@ -51,6 +61,11 @@ services:
       - backend
     networks:
       - art_network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mongodb:
     image: mongo:latest
@@ -62,6 +77,11 @@ services:
       - mongodb_data:/data/db
     networks:
       - art_network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
   art_network:
