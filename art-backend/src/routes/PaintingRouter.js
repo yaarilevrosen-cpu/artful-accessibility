@@ -37,6 +37,9 @@ const rpiController = new RPIController(mqtt);
 
  router.route('/:sys_id/send-installation')
      .post(paintingController.sendInstallationToPi.bind(paintingController));
+
+ router.route('/:sys_id/height')
+     .post(paintingController.setHeight.bind(paintingController));
      
  router.route('/:sys_id/shutdown')
 .post(rpiController.shutdown_painting.bind(rpiController))

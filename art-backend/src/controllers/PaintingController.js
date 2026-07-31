@@ -207,6 +207,42 @@ class PaintingController {
         }
     }
 
+    async setHeight(req, res) {
+        try {
+            const { sys_id } = req.params;
+            const { value } = req.body;
+
+            if (value !== 0 && value !== 1) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Body must include 'value' as 0 (raise) or 1 (lower)"
+                });
+            }
+
+            const painting = await Painting.findBySysId(sys_id);
+            if (!painting) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Painting not found'
+                });
+            }
+
+            const published = await this.mqttService.sendHeightCommand(sys_id, value);
+
+            res.json({
+                success: true,
+                sys_id,
+                published
+            });
+        } catch (error) {
+            console.error('Error sending manual height command:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
     async getStats(req, res) {
         try {
     

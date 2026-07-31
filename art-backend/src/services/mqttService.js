@@ -499,45 +499,57 @@ class MQTTService extends IMQTTService {
     async sendHeightCommand(sys_id, height_command) {
         // height_command: 1 = move down (wheelchair), 0 = move up (normal)
         const topic = `m5stack/${sys_id}/height`;
-        
+
         try {
             // Get painting measurements for proper calculation
             const painting = await Painting.findOne({ sys_id });
             if (!painting) {
                 logger.error(`Painting not found for sys_id: ${sys_id}`);
-                return;
+                return null;
             }
-            
+
             const { base_height, height } = painting;
-            
+
             // Calculate adjustment using the formulas from the image
             const center_height = base_height + (height / 2);
             const average_eye_level = 119.25; // cm (from accessibility standards)
             const adjustment_needed = average_eye_level - center_height;
-            
-            const payload = JSON.stringify({ 
+
+            const payloadObj = {
                 height: height_command,
                 base_height: base_height,
                 painting_height: height,
                 center_height: center_height,
                 adjustment_needed: adjustment_needed
-            });
-            
+            };
+            const payload = JSON.stringify(payloadObj);
+
             logger.info(`Sending height command to M5Stack: ${height_command ? 'DOWN' : 'UP'}`);
             logger.info(`Painting measurements - Base: ${base_height}cm, Height: ${height}cm, Center: ${center_height.toFixed(2)}cm, Adjustment: ${adjustment_needed.toFixed(2)}cm`);
-            
-            this.mqttClient.publish(topic, payload, {qos: 2}, (err) => {
-                if (err) {
-                    logger.error('Failed to send height command:', err.message);
-                } else {
-                    logger.info('Height command with measurements sent successfully');
-                }
+
+            await new Promise((resolve, reject) => {
+                this.mqttClient.publish(topic, payload, {qos: 2}, (err) => {
+                    if (err) {
+                        logger.error('Failed to send height command:', err.message);
+                        reject(err);
+                    } else {
+                        logger.info('Height command with measurements sent successfully');
+                        resolve();
+                    }
+                });
             });
+            return { topic, payload: payloadObj };
         } catch (error) {
             logger.error('Error getting painting measurements:', error);
             // Fallback to simple command
-            const payload = JSON.stringify({ height: height_command });
-            this.mqttClient.publish(topic, payload, {qos: 2});
+            const payloadObj = { height: height_command };
+            const payload = JSON.stringify(payloadObj);
+            await new Promise((resolve, reject) => {
+                this.mqttClient.publish(topic, payload, {qos: 2}, (err) => {
+                    if (err) reject(err); else resolve();
+                });
+            });
+            return { topic, payload: payloadObj };
         }
     }
 

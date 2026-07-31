@@ -2,15 +2,33 @@ import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { setPageTitle } from '../../features/common/headerSlice'
 import axios from 'axios'
+import backendAxios from '../../utils/axios'
 import VideoCameraIcon from '@heroicons/react/24/solid/VideoCameraIcon'
 
 const INFERENCE_BASE_URL = process.env.REACT_APP_INFERENCE_URL || 'http://192.168.68.135:5001'
 const POLL_INTERVAL_MS = 300
+const LIVE_SYS_ID = 1784479996299
 
 function LiveDetection() {
     const dispatch = useDispatch()
     const [status, setStatus] = useState(null)
     const [error, setError] = useState(null)
+    const [lastCommand, setLastCommand] = useState(null)
+    const [commandError, setCommandError] = useState(null)
+    const [sending, setSending] = useState(false)
+
+    const sendHeightCommand = async (value) => {
+        setSending(true)
+        setCommandError(null)
+        try {
+            await backendAxios.post(`/paintings/${LIVE_SYS_ID}/height`, { value })
+            setLastCommand({ value, ts: new Date() })
+        } catch (err) {
+            setCommandError(err.message || 'Failed to send command')
+        } finally {
+            setSending(false)
+        }
+    }
 
     useEffect(() => {
         dispatch(setPageTitle({ title: "Live Detection" }))
@@ -70,6 +88,38 @@ function LiveDetection() {
                     {error && (
                         <div className="alert alert-error mt-4">
                             <span>{error}</span>
+                        </div>
+                    )}
+
+                    <div className="divider">Manual Override</div>
+
+                    <div className="flex gap-3">
+                        <button
+                            className="btn btn-primary"
+                            disabled={sending}
+                            onClick={() => sendHeightCommand(1)}
+                        >
+                            Lower painting
+                        </button>
+                        <button
+                            className="btn btn-outline"
+                            disabled={sending}
+                            onClick={() => sendHeightCommand(0)}
+                        >
+                            Raise painting
+                        </button>
+                    </div>
+
+                    {lastCommand && (
+                        <div className="mt-2 text-xs opacity-60">
+                            Last command sent: {lastCommand.value === 1 ? 'Lower' : 'Raise'} at{' '}
+                            {lastCommand.ts.toLocaleTimeString()}
+                        </div>
+                    )}
+
+                    {commandError && (
+                        <div className="alert alert-error mt-2">
+                            <span>{commandError}</span>
                         </div>
                     )}
                 </div>
