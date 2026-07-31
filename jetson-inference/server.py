@@ -1,16 +1,59 @@
 import asyncio
 import time as _t
 import base64
+import glob as _glob
+import threading
+import time
 import numpy as np
 import cv2
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from ultralytics import YOLO
 
-app = FastAPI()
+# ============================================================
+# Constants — every tunable threshold lives here.
+# ============================================================
 
-from fastapi.middleware.cors import CORSMiddleware
+# --- Model paths ---
+MODEL_PATH = "/home/museum/artful-accessibility/jetson-inference/weights/best.engine"
+PERSON_MODEL_PATH = "/home/museum/artful-accessibility/jetson-inference/yolov8n.engine"
+
+# --- Detection classes ---
+WHEELCHAIR_CLASSES = {"wheelchair", "people_wheelchair", "push_wheelchair"}
+PERSON_CLASSES = {"person"}
+PRESENCE_CLASSES = WHEELCHAIR_CLASSES | PERSON_CLASSES
+COCO_PERSON_ID = 0
+
+# --- Inference sizes ---
+CHAIR_IMGSZ = 640
+PERSON_IMGSZ = 256
+
+# --- Confidence thresholds ---
+CONF_THRESHOLD = 0.5       # wheelchair classes
+PRESENCE_THRESHOLD = 0.40  # any person / wheelchair-occupant class
+
+# --- Presence filtering (museum-corridor tuning) ---
+# Ignore boxes smaller than this fraction of the frame area — filters out
+# distant passers-by so only someone actually approaching the painting
+# counts as "present".
+MIN_BOX_AREA_RATIO = 0.04
+
+# Region of interest a box's centre must fall inside to count, expressed as
+# fractions of frame width/height (0.0-1.0). Defaults to the full frame.
+# Tune these while watching the faint rectangle drawn on /stream.
+ROI_X1 = 0.0
+ROI_Y1 = 0.0
+ROI_X2 = 1.0
+ROI_Y2 = 1.0
+
+# --- Colors (BGR) ---
+COLOR_WHEELCHAIR = (0, 255, 0)
+COLOR_PERSON = (255, 180, 0)
+COLOR_ROI = (0, 200, 255)
+
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,16 +62,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MODEL_PATH = "/home/museum/artful-accessibility/jetson-inference/weights/best.engine"
 model = YOLO(MODEL_PATH)
-
-PERSON_MODEL_PATH = "/home/museum/artful-accessibility/jetson-inference/yolov8n.engine"
 person_model = YOLO(PERSON_MODEL_PATH)
-COCO_PERSON_ID = 0
-CHAIR_IMGSZ = 640
-PERSON_IMGSZ = 256
 
-import glob as _glob
 _by_id = _glob.glob("/dev/v4l/by-id/*index0")
 _device = _by_id[0] if _by_id else 0
 camera = cv2.VideoCapture(_device)
@@ -37,11 +73,24 @@ if not camera.isOpened():
 else:
     print("Camera opened successfully at:", _device)
 
-WHEELCHAIR_CLASSES = {"wheelchair", "people_wheelchair", "push_wheelchair"}
-PERSON_CLASSES = {"person"}
-PRESENCE_CLASSES = WHEELCHAIR_CLASSES | PERSON_CLASSES
-CONF_THRESHOLD = 0.5
-PRESENCE_THRESHOLD = 0.40
+
+def _box_metrics(xyxy, frame_shape):
+    """Return (area_ratio, in_roi) for a box given the frame it came from."""
+    h, w = frame_shape[:2]
+    x1, y1, x2, y2 = xyxy
+    area_ratio = max(0.0, (x2 - x1)) * max(0.0, (y2 - y1)) / float(w * h)
+    cx, cy = (x1 + x2) / 2.0, (y1 + y2) / 2.0
+    in_roi = (ROI_X1 * w <= cx <= ROI_X2 * w) and (ROI_Y1 * h <= cy <= ROI_Y2 * h)
+    return area_ratio, in_roi
+
+
+def _draw_roi(frame):
+    h, w = frame.shape[:2]
+    x1, y1 = int(ROI_X1 * w), int(ROI_Y1 * h)
+    x2, y2 = int(ROI_X2 * w), int(ROI_Y2 * h)
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (x1, y1), (x2, y2), COLOR_ROI, 2)
+    cv2.addWeighted(overlay, 0.25, frame, 0.75, 0, frame)
 
 
 class ImageRequest(BaseModel):
@@ -64,6 +113,7 @@ def detect(req: ImageRequest):
     best_conf = 0.0
     present = False
     present_conf = 0.0
+    best_present_area = -1.0
     predictions = []
 
     for r in results:
@@ -71,12 +121,18 @@ def detect(req: ImageRequest):
             cls_name = model.names[int(box.cls[0])]
             conf = float(box.conf[0])
             predictions.append({"class": cls_name, "confidence": round(conf, 3)})
-            if cls_name in WHEELCHAIR_CLASSES and conf >= CONF_THRESHOLD:
+
+            area_ratio, in_roi = _box_metrics(box.xyxy[0], img.shape)
+            passes_filter = area_ratio >= MIN_BOX_AREA_RATIO and in_roi
+
+            if cls_name in WHEELCHAIR_CLASSES and conf >= CONF_THRESHOLD and passes_filter:
                 detected = True
                 best_conf = max(best_conf, conf)
-            if cls_name in PRESENCE_CLASSES and conf >= PRESENCE_THRESHOLD:
+            if cls_name in PRESENCE_CLASSES and conf >= PRESENCE_THRESHOLD and passes_filter:
+                if area_ratio > best_present_area:
+                    best_present_area = area_ratio
+                    present_conf = conf
                 present = True
-                present_conf = max(present_conf, conf)
 
     return {"detected": detected, "confidence": round(best_conf, 3),
             "present": present, "present_confidence": round(present_conf, 3),
@@ -87,6 +143,7 @@ def detect(req: ImageRequest):
 def health():
     return {"status": "ok", "model": MODEL_PATH}
 
+
 @app.get("/capture")
 def capture():
     for _ in range(25):
@@ -95,8 +152,6 @@ def capture():
         _t.sleep(0.1)
     return {"error": "no frame available from inference loop"}
 
-
-import threading, time
 
 latest_status = {"detected": False, "confidence": 0.0,
                  "present": False, "present_confidence": 0.0, "ts": 0.0}
@@ -132,21 +187,27 @@ def inference_loop():
         best_conf = 0.0
         present = False
         present_conf = 0.0
+        best_present_area = -1.0
 
         for r in results:
             for box in r.boxes:
                 cls_name = model.names[int(box.cls[0])]
                 conf = float(box.conf[0])
-                is_chair = cls_name in WHEELCHAIR_CLASSES and conf >= CONF_THRESHOLD
-                is_present = cls_name in PRESENCE_CLASSES and conf >= PRESENCE_THRESHOLD
+                area_ratio, in_roi = _box_metrics(box.xyxy[0], frame.shape)
+                passes_filter = area_ratio >= MIN_BOX_AREA_RATIO and in_roi
+
+                is_chair = cls_name in WHEELCHAIR_CLASSES and conf >= CONF_THRESHOLD and passes_filter
+                is_present = cls_name in PRESENCE_CLASSES and conf >= PRESENCE_THRESHOLD and passes_filter
                 if is_chair:
                     detected = True
                     best_conf = max(best_conf, conf)
                 if is_present:
+                    if area_ratio > best_present_area:
+                        best_present_area = area_ratio
+                        present_conf = conf
                     present = True
-                    present_conf = max(present_conf, conf)
                 if is_chair or is_present:
-                    color = (0, 255, 0) if is_chair else (255, 180, 0)
+                    color = COLOR_WHEELCHAIR if is_chair else COLOR_PERSON
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                     cv2.putText(frame, f"{cls_name} {conf:.2f}", (x1, max(y1 - 10, 0)),
@@ -159,12 +220,19 @@ def inference_loop():
                 conf = float(box.conf[0])
                 if conf < PRESENCE_THRESHOLD:
                     continue
+                area_ratio, in_roi = _box_metrics(box.xyxy[0], frame.shape)
+                if area_ratio < MIN_BOX_AREA_RATIO or not in_roi:
+                    continue
+                if area_ratio > best_present_area:
+                    best_present_area = area_ratio
+                    present_conf = conf
                 present = True
-                present_conf = max(present_conf, conf)
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 180, 0), 2)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), COLOR_PERSON, 2)
                 cv2.putText(frame, f"person {conf:.2f}", (x1, max(y1 - 10, 0)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 180, 0), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_PERSON, 2)
+
+        _draw_roi(frame)
 
         latest_status = {"detected": detected, "confidence": round(best_conf, 3),
                          "present": present, "present_confidence": round(present_conf, 3),
