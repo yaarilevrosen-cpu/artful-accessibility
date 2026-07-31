@@ -152,7 +152,8 @@ class CameraProcessor {
 
     async captureFrame(sys_id) {
         const axios = require('axios');
-        const response = await axios.get('http://192.168.68.135:5001/capture');
+        const hostIp = process.env.HOST_IP || '192.168.68.135';
+        const response = await axios.get(`http://${hostIp}:5001/capture`);
         return response.data.image;
     }
 
@@ -295,7 +296,8 @@ console.log(response)
 
 async function detect_activeLearning(base64Image) {
     try {
-        const response = await axios.post('http://192.168.68.135:5001/detect', {
+        const hostIp = process.env.HOST_IP || '192.168.68.135';
+        const response = await axios.post(`http://${hostIp}:5001/detect`, {
             image: base64Image
         }, {
             headers: {

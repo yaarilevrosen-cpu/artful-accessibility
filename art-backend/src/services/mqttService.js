@@ -30,7 +30,7 @@ const sleep = (ms) =>
 class MQTTService extends IMQTTService {
     constructor() {
         super();
-        this.mqttClient = mqtt.connect('mqtt://192.168.68.135', {
+        this.mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL || 'mqtt://192.168.68.135', {
     port: 1883,
 });
         this.paintingStatusMap = new Map(); // Map to hold painting status for each sys_id

@@ -4,7 +4,7 @@ import { setPageTitle } from '../../features/common/headerSlice'
 import axios from 'axios'
 import VideoCameraIcon from '@heroicons/react/24/solid/VideoCameraIcon'
 
-const INFERENCE_BASE_URL = 'http://192.168.68.135:5001'
+const INFERENCE_BASE_URL = process.env.REACT_APP_INFERENCE_URL || 'http://192.168.68.135:5001'
 const POLL_INTERVAL_MS = 300
 
 function LiveDetection() {

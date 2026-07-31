@@ -3,5 +3,5 @@ node_modules/
 *.log
 __pycache__/
 *.pyc
-jetson-inference/server.py.bak*
+*.bak*.*
 .env
