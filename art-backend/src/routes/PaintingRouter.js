@@ -58,4 +58,7 @@ router.route('/:sys_id/start_program')
 
 
 
+// Exposed so index.js can wire the same MQTTService singleton into
+// presenceService without restructuring how routes get their instance.
 module.exports = router;
+module.exports.mqttService = mqtt;

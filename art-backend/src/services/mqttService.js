@@ -112,135 +112,16 @@ class MQTTService extends IMQTTService {
                         
                         case 'sensor':
                             logger.info(`Sensor response from ${sys_id}`);
-                      
+
                             const { status: sensor_status, distance } = payload;
                             logger.info(chalk.green(distance,sensor_status))
-                          
-                        
-                            const paintingStatus = this.paintingStatusMap.get(sys_id);
+
                             try {
                                 if (sensor_status === 'in') {
                                     logger.info(chalk.green(`Person detected in range for ${sys_id}. Distance: ${distance} cm`));
-                        
-                                    // Update painting status and broadcast
-                                    paintingStatus.sensor = true;
-                                    await broadcastWS({ sys_id, ...paintingStatus });
-                        
-                                    const painting = await Painting.findOne({ sys_id });
-                                    painting.sensor = true;
-                        
-                                    // Check or create stats record
-                                    let stats = await PaintingStats.findOne({ sys_id });
-                                    const currentTime = new Date();
-                        
-                                    if (!stats) {
-                                        logger.info(chalk.green('First time this painting has ever been viewed.'));
-                                        stats = new PaintingStats({
-                                            sys_id: sys_id,
-                                            painting_id: painting._id,
-                                        });
-                                        await stats.save();
-                        
-                                        // Handle wheelchair detection and height adjustment
-                                        painting.wheelchair = 1;
-                                        paintingStatus.wheelchair = 1;
-                                        await broadcastWS({ sys_id, ...paintingStatus });
-                        
-                                        const isDetected = await this.camera.startAnalyze(sys_id);
-                                        //   await sleep(8000);
-                        
-                                        if (isDetected.detected) {
-                                           if( await this.publish_height(sys_id))
-                                            {
-                                                painting.height_adjust = true;
-                                                paintingStatus.height_adjust = true;
-                                                
-                                                // Send height command to M5Stack - MOVE DOWN for wheelchair
-                                                this.sendHeightCommand(sys_id, 1);
-                                                logger.info(chalk.blue(`🎯 WHEELCHAIR DETECTED! Sending M5Stack command: MOVE DOWN`));
-                                            }
-                                        
-                                            painting.wheelchair = 2;
-                                            paintingStatus.wheelchair = 2;
-                                            await broadcastWS({ sys_id, ...paintingStatus });
-                                        } else {
-                                            paintingStatus.wheelchair = 0;
-                                            painting.wheelchair = 0;
-                                            await broadcastWS({ sys_id, ...paintingStatus });
-                                        }
-                        
-                                        await stats.addViewingSession(currentTime, null);
-                                    } else {
-                                        const lastSession = stats.viewingSessions[stats.viewingSessions.length - 1];
-                                     
-                                            logger.info(chalk.green('New session started for this painting.'));
-                                            painting.wheelchair = 1;
-                                            paintingStatus.wheelchair = 1;
-                                            await broadcastWS({ sys_id, ...paintingStatus });
-                        
-                                            const isDetected = await this.camera.startAnalyze(sys_id);
-                                            logger.info('Detection result:', isDetected);
-                                            // await sleep(6000);
-                                            if (isDetected?.detected) {
-                                                if( await this.publish_height(sys_id))
-                                                {
-                                                    painting.height_adjust = true;
-                                                    paintingStatus.height_adjust = true;
-                                                }
-
-                                                painting.wheelchair = 2;
-                                                paintingStatus.wheelchair = 2;
-                                                await broadcastWS({ sys_id, ...paintingStatus });
-                                            } else {
-                                                paintingStatus.wheelchair = 0;
-                                                painting.wheelchair = 0;
-                                                await broadcastWS({ sys_id, ...paintingStatus });
-                                            }
-                        
-                                            await stats.addViewingSession(currentTime, null);
-                                            await stats.save();
-                                        
-                                    }
-                        
-                                    await painting.save();
-                                    logger.info(chalk.bgGreen(`Updated viewing statistics for painting ${sys_id}.`));
+                                    await this.handleVisitorArrived(sys_id, 'sensor');
                                 } else if (sensor_status === 'left') {
-                                    logger.info(chalk.yellow(`Person left range for ${sys_id}.`));
-                                // Check if the system is active
-                                if (this.camera.activeSystems.get(sys_id) === 'active') {
-                                    const { resolve } = this.camera.cameraPromisesMap.get(sys_id);
-                                    resolve({ detected: false, reason: 'manually_resolved' });
-                                    this.camera.stopCamera(sys_id);
-                                }
-                                    // Handle leaving logic
-                                    paintingStatus.sensor = false;
-                                    paintingStatus.wheelchair = 0;
-                                    paintingStatus.height_adjust = false;
-                        
-                                    const painting = await Painting.findOne({ sys_id });
-                                    painting.sensor = false;
-                                    painting.wheelchair = 0;
-                                    painting.height_adjust = false;
-                                    
-                                    // Send height command to M5Stack - MOVE UP when person leaves
-                                    this.sendHeightCommand(sys_id, 0);
-                                    logger.info(chalk.blue(`👋 PERSON LEFT! Sending M5Stack command: MOVE UP`));
-                        
-                                    // Update stats if there's an ongoing session
-                                    const stats = await PaintingStats.findOne({ sys_id });
-                                    if (stats) {
-                                        const lastSession = stats.viewingSessions[stats.viewingSessions.length - 1];
-                                        const currentTime = new Date();
-                                        if (lastSession && !lastSession.endTime) {
-                                            logger.info(chalk.green('Ending current viewing session.'));
-                                            await stats.addViewingSession(lastSession.startTime, currentTime);
-                                            await stats.save();
-                                        }
-                                    }
-                        
-                                    await painting.save();
-                                    await broadcastWS({ sys_id, ...paintingStatus });
-                                    logger.info(chalk.bgYellow(`Updated painting and statistics for ${sys_id} after leaving.`));
+                                    await this.handleVisitorLeft(sys_id, 'sensor');
                                 } else {
                                     console.warn(`Unknown status "${status}" received for ${sys_id}.`);
                                 }
@@ -551,6 +432,148 @@ class MQTTService extends IMQTTService {
             });
             return { topic, payload: payloadObj };
         }
+    }
+
+    // Shared by the MQTT 'sensor' topic (status 'in') and presenceService
+    // (PRESENCE_SOURCE=camera). Deduplicates what used to be two nearly
+    // identical first-view / returning-visit code paths.
+    async handleVisitorArrived(sys_id, source) {
+        logger.info(chalk.green(`Person detected in range for ${sys_id} (source: ${source}).`));
+
+        if (!this.paintingStatusMap.has(sys_id)) {
+            this.paintingStatusMap.set(sys_id, { wheelchair: 0, sensor: false, height_adjust: false });
+        }
+        const paintingStatus = this.paintingStatusMap.get(sys_id);
+
+        paintingStatus.sensor = true;
+        await broadcastWS({ sys_id, ...paintingStatus });
+
+        const painting = await Painting.findOne({ sys_id });
+        painting.sensor = true;
+
+        let stats = await PaintingStats.findOne({ sys_id });
+        const currentTime = new Date();
+
+        if (!stats) {
+            logger.info(chalk.green('First time this painting has ever been viewed.'));
+            stats = new PaintingStats({
+                sys_id: sys_id,
+                painting_id: painting._id,
+            });
+            await stats.save();
+        } else {
+            logger.info(chalk.green('New session started for this painting.'));
+        }
+
+        painting.wheelchair = 1;
+        paintingStatus.wheelchair = 1;
+        await broadcastWS({ sys_id, ...paintingStatus });
+
+        const isDetected = await this.camera.startAnalyze(sys_id);
+        logger.info('Detection result:', isDetected);
+
+        if (isDetected?.detected) {
+            if (await this.publish_height(sys_id)) {
+                painting.height_adjust = true;
+                paintingStatus.height_adjust = true;
+
+                // Send height command to M5Stack - MOVE DOWN for wheelchair
+                this.sendHeightCommand(sys_id, 1);
+                logger.info(chalk.blue(`🎯 WHEELCHAIR DETECTED! Sending M5Stack command: MOVE DOWN`));
+            }
+
+            painting.wheelchair = 2;
+            paintingStatus.wheelchair = 2;
+            await broadcastWS({ sys_id, ...paintingStatus });
+        } else {
+            paintingStatus.wheelchair = 0;
+            painting.wheelchair = 0;
+            await broadcastWS({ sys_id, ...paintingStatus });
+        }
+
+        await stats.addViewingSession(currentTime, null);
+        await painting.save();
+        logger.info(chalk.bgGreen(`Updated viewing statistics for painting ${sys_id}.`));
+    }
+
+    // Shared by the MQTT 'sensor' topic (status 'left') and presenceService.
+    async handleVisitorLeft(sys_id, source) {
+        logger.info(chalk.yellow(`Person left range for ${sys_id} (source: ${source}).`));
+
+        // Check if the system is active
+        if (this.camera.activeSystems.get(sys_id) === 'active') {
+            const { resolve } = this.camera.cameraPromisesMap.get(sys_id);
+            resolve({ detected: false, reason: 'manually_resolved' });
+            this.camera.stopCamera(sys_id);
+        }
+
+        if (!this.paintingStatusMap.has(sys_id)) {
+            this.paintingStatusMap.set(sys_id, { wheelchair: 0, sensor: false, height_adjust: false });
+        }
+        const paintingStatus = this.paintingStatusMap.get(sys_id);
+
+        // Handle leaving logic
+        paintingStatus.sensor = false;
+        paintingStatus.wheelchair = 0;
+        paintingStatus.height_adjust = false;
+
+        const painting = await Painting.findOne({ sys_id });
+        painting.sensor = false;
+        painting.wheelchair = 0;
+        painting.height_adjust = false;
+
+        // Send height command to M5Stack - MOVE UP when person leaves
+        this.sendHeightCommand(sys_id, 0);
+        logger.info(chalk.blue(`👋 PERSON LEFT! Sending M5Stack command: MOVE UP`));
+
+        // Update stats if there's an ongoing session
+        const stats = await PaintingStats.findOne({ sys_id });
+        if (stats) {
+            const lastSession = stats.viewingSessions[stats.viewingSessions.length - 1];
+            const currentTime = new Date();
+            if (lastSession && !lastSession.endTime) {
+                logger.info(chalk.green('Ending current viewing session.'));
+                await stats.addViewingSession(lastSession.startTime, currentTime);
+                await stats.save();
+            }
+        }
+
+        await painting.save();
+        await broadcastWS({ sys_id, ...paintingStatus });
+        logger.info(chalk.bgYellow(`Updated painting and statistics for ${sys_id} after leaving.`));
+    }
+
+    // Continuous wheelchair re-evaluation while a visitor is present
+    // (presenceService only — the sensor path only evaluates once on
+    // arrival, per handleVisitorArrived, which is left unchanged).
+    async applyWheelchairState(sys_id, detected) {
+        if (!this.paintingStatusMap.has(sys_id)) {
+            this.paintingStatusMap.set(sys_id, { wheelchair: 0, sensor: true, height_adjust: false });
+        }
+        const paintingStatus = this.paintingStatusMap.get(sys_id);
+        const painting = await Painting.findOne({ sys_id });
+        if (!painting) {
+            logger.error(`applyWheelchairState: painting not found for sys_id: ${sys_id}`);
+            return;
+        }
+
+        if (detected) {
+            if (await this.publish_height(sys_id)) {
+                painting.height_adjust = true;
+                paintingStatus.height_adjust = true;
+            }
+            painting.wheelchair = 2;
+            paintingStatus.wheelchair = 2;
+        } else {
+            this.sendHeightCommand(sys_id, 0);
+            painting.wheelchair = 0;
+            painting.height_adjust = false;
+            paintingStatus.wheelchair = 0;
+            paintingStatus.height_adjust = false;
+        }
+
+        await painting.save();
+        await broadcastWS({ sys_id, ...paintingStatus });
     }
 
 }

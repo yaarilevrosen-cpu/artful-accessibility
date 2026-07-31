@@ -27,6 +27,7 @@ const {initializePaintingStats} = require("./src/models/PaintingStats");
 const {seedUsers} = require("./src/models/User");
 const {initializeWebSocket} = require("./src/services/websocketService");
 const {createServer} = require("node:http");
+const {PresenceService} = require("./src/services/presenceService");
 
 // middleware/auth.js
 const isAuthenticated = (req, res, next) => {
@@ -76,6 +77,17 @@ server.listen(PORT, async () => {
     await seedUsers();
     await deleteAllFrameFolders();
     console.log("Connected to MongoDB");
+
+    // Camera-driven presence detection is opt-in and off by default so the
+    // ESP32 distance sensor flow (MQTT 'sensor' topic) keeps working
+    // unchanged unless this is deliberately switched on.
+    if (process.env.PRESENCE_SOURCE === 'camera') {
+        const presenceService = new PresenceService(paintingRoutes.mqttService);
+        presenceService.start();
+        console.log('PRESENCE_SOURCE=camera: presenceService started');
+    } else {
+        console.log(`PRESENCE_SOURCE=${process.env.PRESENCE_SOURCE || 'sensor'}: presenceService not started (sensor-driven flow only)`);
+    }
 });
 
 app.on('error', (error) => {
