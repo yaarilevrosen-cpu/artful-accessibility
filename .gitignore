@@ -1,3 +1,7 @@
-node_modules/ 
-.idea/ 
-*.log 
+node_modules/
+.idea/
+*.log
+__pycache__/
+*.pyc
+jetson-inference/server.py.bak*
+.env

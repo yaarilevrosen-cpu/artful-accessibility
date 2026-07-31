@@ -40,8 +40,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_BASE_URL=http://192.168.68.133:3001
-      - REACT_APP_SOCKET_URL=ws://192.168.68.133:3001
+      - REACT_APP_BASE_URL=http://192.168.68.135:3001
+      - REACT_APP_SOCKET_URL=ws://192.168.68.135:3001
     depends_on:
       - backend
     networks:
