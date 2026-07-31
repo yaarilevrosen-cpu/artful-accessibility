@@ -24,14 +24,14 @@ function LiveDetection() {
             await backendAxios.post(`/paintings/${LIVE_SYS_ID}/height`, { value })
             setLastCommand({ value, ts: new Date() })
         } catch (err) {
-            setCommandError(err.message || 'Failed to send command')
+            setCommandError(err.message || 'שליחת הפקודה נכשלה')
         } finally {
             setSending(false)
         }
     }
 
     useEffect(() => {
-        dispatch(setPageTitle({ title: "Live Detection" }))
+        dispatch(setPageTitle({ title: "זיהוי בזמן אמת" }))
         let alive = true
         let id = null
 
@@ -54,32 +54,32 @@ function LiveDetection() {
     const present = status?.present
     const conf = wheelchair ? status?.confidence : status?.present_confidence
 
-    let label = 'No one present'
+    let label = 'לא זוהה איש'
     let badge = 'badge-ghost'
-    if (wheelchair) { label = 'Wheelchair detected'; badge = 'badge-success' }
-    else if (present) { label = 'Person detected'; badge = 'badge-warning' }
+    if (wheelchair) { label = 'זוהה כיסא גלגלים'; badge = 'badge-success' }
+    else if (present) { label = 'זוהה אדם'; badge = 'badge-warning' }
 
     return (
-        <div className="p-4">
+        <div className="p-4" dir="rtl">
             <div className="flex items-center gap-2 mb-4">
                 <VideoCameraIcon className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl font-bold">Live Camera & Detection</h1>
+                <h1 className="text-2xl font-bold">מצלמה חיה וזיהוי</h1>
             </div>
 
             <div className="card bg-base-100 shadow-xl max-w-2xl">
                 <div className="card-body items-center">
                     <img
                         src={`${INFERENCE_BASE_URL}/stream`}
-                        alt="Live camera feed"
+                        alt="שידור מצלמה חי"
                         className="rounded-lg w-full max-w-md border"
                     />
 
                     <div className="mt-2 flex items-center gap-2 text-xs opacity-60">
                         <span
                             className={`inline-block h-2.5 w-2.5 rounded-full ${status?.camera_ok ? 'bg-success' : 'bg-error'}`}
-                            title={status?.camera_ok ? 'Camera OK' : 'Camera not responding'}
+                            title={status?.camera_ok ? 'המצלמה תקינה' : 'המצלמה אינה מגיבה'}
                         />
-                        <span>{status?.camera_ok ? 'Camera OK' : 'Camera down'}</span>
+                        <span>{status?.camera_ok ? 'המצלמה תקינה' : 'המצלמה מנותקת'}</span>
                         <span>·</span>
                         <span>{(status?.fps ?? 0).toFixed(1)} fps</span>
                     </div>
@@ -87,21 +87,21 @@ function LiveDetection() {
                     <div className={`mt-4 badge badge-lg ${badge}`}>{label}</div>
 
                     <div className="mt-2 text-sm opacity-70">
-                        Confidence: {((conf || 0) * 100).toFixed(1)}%
+                        רמת ביטחון: {((conf || 0) * 100).toFixed(1)}%
                     </div>
 
                     <div className="mt-3 flex gap-4 text-xs opacity-60">
-                        <span>person: {present ? 'yes' : 'no'}</span>
-                        <span>wheelchair: {wheelchair ? 'yes' : 'no'}</span>
+                        <span>אדם: {present ? 'כן' : 'לא'}</span>
+                        <span>כיסא גלגלים: {wheelchair ? 'כן' : 'לא'}</span>
                     </div>
 
                     {error && (
                         <div className="alert alert-error mt-4">
-                            <span>{error}</span>
+                            <span>שגיאה: {error}</span>
                         </div>
                     )}
 
-                    <div className="divider">Manual Override</div>
+                    <div className="divider">שליטה ידנית</div>
 
                     <div className="flex gap-3">
                         <button
@@ -109,27 +109,27 @@ function LiveDetection() {
                             disabled={sending}
                             onClick={() => sendHeightCommand(1)}
                         >
-                            Lower painting
+                            הנמך את הציור
                         </button>
                         <button
                             className="btn btn-outline"
                             disabled={sending}
                             onClick={() => sendHeightCommand(0)}
                         >
-                            Raise painting
+                            הרם את הציור
                         </button>
                     </div>
 
                     {lastCommand && (
                         <div className="mt-2 text-xs opacity-60">
-                            Last command sent: {lastCommand.value === 1 ? 'Lower' : 'Raise'} at{' '}
+                            פקודה אחרונה שנשלחה: {lastCommand.value === 1 ? 'הנמכה' : 'הרמה'} בשעה{' '}
                             {lastCommand.ts.toLocaleTimeString()}
                         </div>
                     )}
 
                     {commandError && (
                         <div className="alert alert-error mt-2">
-                            <span>{commandError}</span>
+                            <span>שגיאה: {commandError}</span>
                         </div>
                     )}
                 </div>
