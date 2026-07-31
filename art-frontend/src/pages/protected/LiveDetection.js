@@ -74,6 +74,16 @@ function LiveDetection() {
                         className="rounded-lg w-full max-w-md border"
                     />
 
+                    <div className="mt-2 flex items-center gap-2 text-xs opacity-60">
+                        <span
+                            className={`inline-block h-2.5 w-2.5 rounded-full ${status?.camera_ok ? 'bg-success' : 'bg-error'}`}
+                            title={status?.camera_ok ? 'Camera OK' : 'Camera not responding'}
+                        />
+                        <span>{status?.camera_ok ? 'Camera OK' : 'Camera down'}</span>
+                        <span>·</span>
+                        <span>{(status?.fps ?? 0).toFixed(1)} fps</span>
+                    </div>
+
                     <div className={`mt-4 badge badge-lg ${badge}`}>{label}</div>
 
                     <div className="mt-2 text-sm opacity-70">

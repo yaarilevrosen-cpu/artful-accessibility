@@ -1,6 +1,7 @@
 import asyncio
 import time as _t
 import base64
+import collections
 import glob as _glob
 import threading
 import time
@@ -53,6 +54,9 @@ COLOR_WHEELCHAIR = (0, 255, 0)
 COLOR_PERSON = (255, 180, 0)
 COLOR_ROI = (0, 200, 255)
 
+# --- Health metrics ---
+FPS_WINDOW = 30  # rolling average over this many frames
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -91,6 +95,20 @@ def _draw_roi(frame):
     overlay = frame.copy()
     cv2.rectangle(overlay, (x1, y1), (x2, y2), COLOR_ROI, 2)
     cv2.addWeighted(overlay, 0.25, frame, 0.75, 0, frame)
+
+
+_start_time = time.time()
+_frame_times = collections.deque(maxlen=FPS_WINDOW)
+_camera_ok = False
+
+
+def _current_fps():
+    if len(_frame_times) < 2:
+        return 0.0
+    span = _frame_times[-1] - _frame_times[0]
+    if span <= 0:
+        return 0.0
+    return round((len(_frame_times) - 1) / span, 2)
 
 
 class ImageRequest(BaseModel):
@@ -160,12 +178,14 @@ latest_annotated = None
 
 
 def inference_loop():
-    global camera, latest_status, latest_raw, latest_annotated
+    global camera, latest_status, latest_raw, latest_annotated, _camera_ok
     fails = 0
     while True:
         ret, frame = camera.read()
         if not ret:
             fails += 1
+            _camera_ok = False
+            _frame_times.clear()
             try:
                 camera.release()
             except Exception:
@@ -176,6 +196,8 @@ def inference_loop():
                 print("camera read failing, retry", fails, flush=True)
             continue
         fails = 0
+        _camera_ok = True
+        _frame_times.append(time.time())
 
         ok, raw_buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
         if ok:
@@ -262,4 +284,9 @@ async def stream():
 
 @app.get("/status")
 def status():
-    return latest_status
+    return {
+        **latest_status,
+        "fps": _current_fps(),
+        "uptime_seconds": round(time.time() - _start_time, 1),
+        "camera_ok": _camera_ok,
+    }
