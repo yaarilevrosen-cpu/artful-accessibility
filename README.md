@@ -39,22 +39,26 @@ the last known IP, so nothing breaks if `.env` is missing — but the
 Note: the ESP32 painting-motor firmware is not part of this repo and
 has its own configuration for reaching the MQTT broker.
 
-## Presence source: sensor vs camera
+## Presence source: camera (default) vs sensor
 
-Presence detection (when the painting lowers/raises) can be driven by
-either the ESP32 distance sensor (over MQTT) or the Jetson camera
-(polling the inference server's `/status`). This is controlled by the
-`PRESENCE_SOURCE` environment variable, read in `art-backend/index.js`:
+Presence detection (when the painting lowers/raises) is driven by the
+Jetson camera: `art-backend/src/services/presenceService.js` polls the
+inference server's `http://$HOST_IP:5001/status` twice a second and
+drives arrival/departure. This is the actual, currently-deployed
+system — the original ESP32 ultrasonic-distance-sensor hardware
+(`RPi4 - Master/`) is retired and no longer installed.
 
-- `PRESENCE_SOURCE=sensor` (or unset) — default. Behaviour is
-  unchanged from before this flag existed: the ESP32's MQTT `sensor`
-  topic drives arrival/departure.
-- `PRESENCE_SOURCE=camera` — `art-backend/src/services/presenceService.js`
-  polls `http://$HOST_IP:5001/status` twice a second and drives the
-  same arrival/departure logic instead.
+This is controlled by the `PRESENCE_SOURCE` environment variable, read
+in `art-backend/index.js`:
+
+- `PRESENCE_SOURCE=camera` (or unset) — default. Behaviour as
+  described above.
+- `PRESENCE_SOURCE=sensor` — reverts to the ESP32's MQTT `sensor`
+  topic driving arrival/departure instead. Kept selectable only in
+  case that hardware is ever reinstalled; not exercised on the
+  current deployment.
 
 Both paths call the same `handleVisitorArrived` /
 `handleVisitorLeft` methods on `mqttService`, so painting state,
 viewing stats, and MQTT height commands behave identically regardless
-of source. Set it in `.env` (uncomment the `PRESENCE_SOURCE=camera`
-line) and run `docker compose up -d` to switch.
+of source. Set it in `.env` and run `docker compose up -d` to switch.

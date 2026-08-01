@@ -31,9 +31,10 @@ services:
       - MQTT_BROKER_URL=mqtt://art_mosquitto
       # Inference server runs on the host (not in Docker), so it needs the host IP.
       - HOST_IP=${HOST_IP:-192.168.68.135}
-      # sensor (default) = ESP32 distance sensor drives presence over MQTT.
-      # camera = presenceService.js polls the inference server /status instead.
-      - PRESENCE_SOURCE=${PRESENCE_SOURCE:-sensor}
+      # camera (default) = presenceService.js polls the inference server /status.
+      # sensor = ESP32 distance sensor drives presence over MQTT. That
+      # hardware is retired; kept selectable only in case it's reinstalled.
+      - PRESENCE_SOURCE=${PRESENCE_SOURCE:-camera}
       # Optional full override of the /status URL presenceService polls (e.g. for testing).
       - PRESENCE_STATUS_URL=${PRESENCE_STATUS_URL:-}
     volumes:
