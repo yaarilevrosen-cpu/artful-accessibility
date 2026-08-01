@@ -1,6 +1,7 @@
 const Painting = require('../models/PaintingSystem');
 const {PaintingStats} = require('../models/PaintingStats');
 const { painting_status } = require('../utils/config');
+const { broadcastWS } = require('../services/websocketService');
 
 // controllers/PaintingController.js
 class PaintingController {
@@ -228,6 +229,20 @@ class PaintingController {
             }
 
             const published = await this.mqttService.sendHeightCommand(sys_id, value);
+
+            // Persist the same DB state a detection-driven lower/raise would
+            // (see applyWheelchairState / handleVisitorArrived) so a manual
+            // command isn't invisible to startup reconciliation (FIX 3) —
+            // otherwise a manual "lower" leaves the DB saying the painting
+            // is up even though it physically isn't.
+            painting.wheelchair = value ? 2 : 0;
+            painting.height_adjust = !!value;
+            await painting.save();
+            await broadcastWS({
+                sys_id: painting.sys_id,
+                wheelchair: painting.wheelchair,
+                height_adjust: painting.height_adjust,
+            });
 
             res.json({
                 success: true,

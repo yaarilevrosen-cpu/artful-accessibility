@@ -45,6 +45,32 @@ class MQTTService extends IMQTTService {
             logger.info('Connected to MQTT broker');
             const result = await Painting.updateMany({}, { $set: { status: 'Inactive' } });
             logger.info(`${result.modifiedCount} paintings updated to "Inactive".`);
+
+            // Startup/reconnect reconciliation (FIX 3): isPresent (and every
+            // in-memory presence flag) always starts false on a fresh
+            // process, so if a restart happens while a painting is
+            // physically lowered, nothing would otherwise ever raise it
+            // back up until a brand-new visitor arrival. Raising is safe
+            // even if the painting is already up, so unconditionally raise
+            // anything the DB says was left lowered and clear that state.
+            try {
+                const stranded = await Painting.find({ $or: [{ wheelchair: 2 }, { height_adjust: true }] });
+                for (const p of stranded) {
+                    logger.warn(`STARTUP RECONCILE: painting ${p.sys_id} was left lowered — sending raise command.`);
+                    await this.sendHeightCommand(p.sys_id, 0);
+                    p.wheelchair = 0;
+                    p.height_adjust = false;
+                    p.sensor = false;
+                    await p.save();
+                    await broadcastWS({ sys_id: p.sys_id, status: 'Inactive', sensor: false, wheelchair: 0, height_adjust: false });
+                }
+                if (stranded.length) {
+                    logger.warn(`STARTUP RECONCILE: raised ${stranded.length} painting(s) left lowered from a previous run.`);
+                }
+            } catch (err) {
+                logger.error(`STARTUP RECONCILE failed: ${err.message}`);
+            }
+
             this.mqttClient.subscribe('m5stack/#', {qos: 2});
 
 
