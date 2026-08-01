@@ -1,8 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import useWebSocket from 'react-use-websocket';
 
+// Resolves the backend/inference host from whatever address the page
+// was loaded from, so LAN and Tailscale both work with one build.
+const h = typeof window !== 'undefined' ? window.location.hostname : '192.168.68.135';
+
+
 const WebSocket = () => {
-    const [socketUrl] = useState(process.env.REACT_APP_SOCKET_URL || 'ws://192.168.68.135:3001');
+    const [socketUrl] = useState(process.env.REACT_APP_SOCKET_URL || `ws://${h}:3001`);
     const [messageHistory, setMessageHistory] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
 

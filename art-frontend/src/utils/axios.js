@@ -1,8 +1,13 @@
 import axios from 'axios';
 
+// Resolves the backend/inference host from whatever address the page
+// was loaded from, so LAN and Tailscale both work with one build.
+const h = typeof window !== 'undefined' ? window.location.hostname : '192.168.68.135';
+
+
 // Create an Axios instance
 const axiosInstance = axios.create({
-    baseURL: process.env.REACT_APP_BASE_URL || 'http://192.168.68.135:3001', // Replace with your backend base URL
+    baseURL: process.env.REACT_APP_BASE_URL || `http://${h}:3001`,
     timeout: 10000, // Timeout in milliseconds (10 seconds)
     headers: {
         'Content-Type': 'application/json' // Default headers (adjust as needed)

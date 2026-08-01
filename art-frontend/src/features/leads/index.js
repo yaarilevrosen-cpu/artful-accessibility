@@ -186,6 +186,23 @@ function Leads() {
     };
 
    
+    const [heightBusy, setHeightBusy] = useState(null);
+
+    const handleHeight = async (sys_id, value) => {
+        setHeightBusy(`${sys_id}-${value}`);
+        try {
+            await axios.post(`/paintings/${sys_id}/height`, { value });
+            dispatch(showNotification({
+                message: value === 1 ? "פקודת הורדה נשלחה" : "פקודת העלאה נשלחה",
+                status: 1,
+            }));
+        } catch (e) {
+            dispatch(showNotification({ message: "שליחת הפקודה נכשלה", status: 0 }));
+        } finally {
+            setHeightBusy(null);
+        }
+    };
+
     const handleMoreInfo = (lead) => {
         dispatch(
             openModal({
@@ -198,35 +215,19 @@ function Leads() {
     
 
     {/* Define Status Inline */}
-    const Status = ({ icon, label, explanation , sys_id}) => {
+    const Status = ({ icon, label, explanation , sys_id, status}) => {
+        const isOn = status === "Active";
 
            // Function to handle API calls based on the selected option
-    const handleSelectChange = async ({ updateType, value }) => {
-        console.log(`Selected option for ${updateType}: ${value}`);
-
+    const setPower = async (on) => {
         try {
-            if (value === 'active') {
-                await axios.post(`/paintings/${sys_id}/active`, { status: 'active' });
-                console.log('System activated via API');
-            } else if (value === 'shutdown') {
-                await axios.post(`/paintings/${sys_id}/shutdown`, { status: 'shutdown' });
-                console.log('System deactivated via API');
-            } else if (value === 'restart') {
-                await axios.post(`/paintings/${sys_id}/restart`, { status: 'restart' });
-                console.log('System set to restart via API');
-            } else if (value === 'stop') {
-                await axios.post(`/paintings/${sys_id}/stop_program`, { status: 'stop' });
-                console.log('System set to restart via API');
-            } else if (value === 'start') {
-                await axios.post(`/paintings/${sys_id}/start_program`, { status: 'start' });
-                console.log('System set to restart via API');
-            } else {
-                console.log('Unhandled option:', value);
-            }
-        } catch (error) {
-            console.error('Error while making API call:', error);
+            await axios.post(`/paintings/${sys_id}/${on ? 'start_program' : 'stop_program'}`, {});
+            console.log('power ->', on ? 'ON' : 'OFF');
+        } catch (err) {
+            console.error('power change failed:', err);
         }
     };
+
         // Check if the label is "System Status"
         const isSystemStatus = label === "System Status";
         const RestartIcon = () => (
@@ -257,32 +258,21 @@ function Leads() {
     
                 {/* Column 2: SelectBox (Only for "System Status") */}
                 {isSystemStatus && (
-                    <div className = {"flex item-center"}>
-                        <CustomDropdown
-                            // labelTitle="Select Status"
-                            // labelDescription="Choose a status for the system"
-                            defaultValue=""
-                            containerStyle="w-min"
-                            // placeholder="Choose a status..."
-                            labelStyle="text-gray-700 font-medium"
-                            icon= {<RestartIcon/>}
-
-                            options={[
-                             
-                                // { name: 'Stop Program', value: 'stop' },
-                                { name: "Choose a status...", value: '---' },
-                                { name: 'Shutdown MicroController', value: 'shutdown' },
-                                { name: 'Restart MicroController', value: 'restart' },
-                                { name: 'Re/Start Program', value: 'start' },
-                            ]}
-                            updateType="status"
-                            updateFormValue={(newValue) =>{
-                                  console.log('Updated Form Value:', newValue)
-                                handleSelectChange(newValue)
-                            }
-                              
-                            }
-                        />
+                    <div className="flex gap-1 justify-end">
+                        <button
+                            onClick={() => setPower(true)}
+                            className={`px-3 py-1 text-xs rounded-md border transition ${
+                                isOn ? "bg-emerald-600 text-white border-emerald-600"
+                                     : "bg-white text-gray-500 border-gray-300 hover:bg-emerald-50"
+                            }`}
+                        >פועל</button>
+                        <button
+                            onClick={() => setPower(false)}
+                            className={`px-3 py-1 text-xs rounded-md border transition ${
+                                !isOn ? "bg-gray-600 text-white border-gray-600"
+                                      : "bg-white text-gray-500 border-gray-300 hover:bg-gray-100"
+                            }`}
+                        >כבוי</button>
                     </div>
                 )}
             </div>
@@ -350,8 +340,8 @@ function Leads() {
                                           {/* Other Status  */}
                                           <Status
                                             icon={lead.sensor ? RunningIcon : StoppedIcon}
-                                            label="Sensor"
-                                            explanation={lead.sensor ? "A person is detected by the sensor." : "No person detected by the sensor."}
+                                            label="נוכחות"
+                                            explanation={lead.sensor ? "אדם מזוהה מול הציור." : "אין אדם מול הציור."}
                                           />
                                           <Status
                                             icon={
@@ -392,6 +382,23 @@ function Leads() {
                                         </div>
 
                                         </div>
+                            <div className="flex gap-2 justify-center px-4 pt-3 border-t">
+                                <button
+                                    className="flex-1 text-sm border border-amber-500 text-amber-600 rounded-md py-1 hover:bg-amber-50 transition disabled:opacity-40"
+                                    onClick={() => handleHeight(lead.sys_id, 1)}
+                                    disabled={heightBusy !== null}
+                                >
+                                    &#8595; הורד ציור
+                                </button>
+                                <button
+                                    className="flex-1 text-sm border border-emerald-600 text-emerald-700 rounded-md py-1 hover:bg-emerald-50 transition disabled:opacity-40"
+                                    onClick={() => handleHeight(lead.sys_id, 0)}
+                                    disabled={heightBusy !== null}
+                                >
+                                    &#8593; העלה ציור
+                                </button>
+                            </div>
+
                             <div className="flex justify-between items-center p-4 border-t">
                                                 <div className="border-r pr-4">
                                                     <button

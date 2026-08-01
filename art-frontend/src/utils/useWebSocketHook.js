@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import useWebSocket ,  { ReadyState }from 'react-use-websocket';
 
+const WS_URL = process.env.REACT_APP_SOCKET_URL || `ws://${typeof window!=='undefined'?window.location.hostname:'192.168.68.135'}:3001`;
+
 const useWebSocketHook = () => {
     const [messages, setMessageHistory] = useState([]);
     const [readyState, setReadyState] = useState(ReadyState.CLOSED); // Initial state
 
-    const { sendMessage, lastMessage } = useWebSocket(process.env.REACT_APP_SOCKET_URL, {
+    const { sendMessage, lastMessage } = useWebSocket(WS_URL, {
         onOpen: () => setReadyState(ReadyState.OPEN),
         onClose: () => setReadyState(ReadyState.CLOSED),
         onError: (error) => console.error('Error:', error),

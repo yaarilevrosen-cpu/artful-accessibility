@@ -547,6 +547,7 @@ class MQTTService extends IMQTTService {
     // (presenceService only — the sensor path only evaluates once on
     // arrival, per handleVisitorArrived, which is left unchanged).
     async applyWheelchairState(sys_id, detected) {
+        logger.info(chalk.cyan(`presenceService re-evaluation for ${sys_id}: detected=${detected}`));
         if (!this.paintingStatusMap.has(sys_id)) {
             this.paintingStatusMap.set(sys_id, { wheelchair: 0, sensor: true, height_adjust: false });
         }

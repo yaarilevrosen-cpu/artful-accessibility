@@ -5,7 +5,12 @@ import axios from 'axios'
 import backendAxios from '../../utils/axios'
 import VideoCameraIcon from '@heroicons/react/24/solid/VideoCameraIcon'
 
-const INFERENCE_BASE_URL = process.env.REACT_APP_INFERENCE_URL || 'http://192.168.68.135:5001'
+// Resolves the backend/inference host from whatever address the page
+// was loaded from, so LAN and Tailscale both work with one build.
+const h = typeof window !== 'undefined' ? window.location.hostname : '192.168.68.135';
+
+
+const INFERENCE_BASE_URL = process.env.REACT_APP_INFERENCE_URL || `http://${h}:5001`
 const POLL_INTERVAL_MS = 300
 const LIVE_SYS_ID = 1784479996299
 
@@ -13,22 +18,7 @@ function LiveDetection() {
     const dispatch = useDispatch()
     const [status, setStatus] = useState(null)
     const [error, setError] = useState(null)
-    const [lastCommand, setLastCommand] = useState(null)
-    const [commandError, setCommandError] = useState(null)
-    const [sending, setSending] = useState(false)
 
-    const sendHeightCommand = async (value) => {
-        setSending(true)
-        setCommandError(null)
-        try {
-            await backendAxios.post(`/paintings/${LIVE_SYS_ID}/height`, { value })
-            setLastCommand({ value, ts: new Date() })
-        } catch (err) {
-            setCommandError(err.message || 'שליחת הפקודה נכשלה')
-        } finally {
-            setSending(false)
-        }
-    }
 
     useEffect(() => {
         dispatch(setPageTitle({ title: "זיהוי בזמן אמת" }))
@@ -101,37 +91,7 @@ function LiveDetection() {
                         </div>
                     )}
 
-                    <div className="divider">שליטה ידנית</div>
 
-                    <div className="flex gap-3">
-                        <button
-                            className="btn btn-primary"
-                            disabled={sending}
-                            onClick={() => sendHeightCommand(1)}
-                        >
-                            הנמך את הציור
-                        </button>
-                        <button
-                            className="btn btn-outline"
-                            disabled={sending}
-                            onClick={() => sendHeightCommand(0)}
-                        >
-                            הרם את הציור
-                        </button>
-                    </div>
-
-                    {lastCommand && (
-                        <div className="mt-2 text-xs opacity-60">
-                            פקודה אחרונה שנשלחה: {lastCommand.value === 1 ? 'הנמכה' : 'הרמה'} בשעה{' '}
-                            {lastCommand.ts.toLocaleTimeString()}
-                        </div>
-                    )}
-
-                    {commandError && (
-                        <div className="alert alert-error mt-2">
-                            <span>שגיאה: {commandError}</span>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

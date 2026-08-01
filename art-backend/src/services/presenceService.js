@@ -5,6 +5,8 @@
 // instantiated, so the existing sensor-driven flow is completely unaffected.
 const axios = require('axios');
 const winston = require('winston');
+const Painting = require('../models/PaintingSystem');
+const { broadcastWS } = require('./websocketService');
 
 const logger = winston.createLogger({
     level: 'info',
@@ -18,12 +20,15 @@ const logger = winston.createLogger({
 });
 
 const HOST_IP = process.env.HOST_IP || '192.168.68.135';
-const STATUS_URL = `http://${HOST_IP}:5001/status`;
+// Override lets this be pointed at a test double without touching HOST_IP
+// (which other services also rely on).
+const STATUS_URL = process.env.PRESENCE_STATUS_URL || `http://${HOST_IP}:5001/status`;
 
 const POLL_MS = 500;
 const ARRIVE_STREAK = parseInt(process.env.PRESENCE_ARRIVE_STREAK || '3', 10);
 const LEAVE_STREAK = parseInt(process.env.PRESENCE_LEAVE_STREAK || '15', 10);
 const COOLDOWN_MS = parseInt(process.env.PRESENCE_COOLDOWN_MS || '5000', 10);
+const STARTUP_MS = parseInt(process.env.PRESENCE_STARTUP_MS || '6000', 10);
 const DEFAULT_SYS_ID = parseInt(process.env.PRESENCE_SYS_ID || '1784479996299', 10);
 
 class PresenceService {
@@ -36,6 +41,31 @@ class PresenceService {
         this.lastCommand = null; // 0 (up) | 1 (down) | null
         this.lastCommandAt = 0;
         this.timer = null;
+        this.systemOn = null;   // null = לא ידוע עדיין
+        this.readyAt = 0;       // זמן סיום החימום
+    }
+
+    async shutdownReset() {
+        logger.info('presenceService: system OFF — resetting painting state');
+        this.presentStreak = 0;
+        this.absentStreak = 0;
+        this.lastCommand = null;
+        this.lastCommandAt = 0;
+        const wasPresent = this.isPresent;
+        this.isPresent = false;
+        try {
+            if (wasPresent) {
+                await this.mqttService.handleVisitorLeft(this.sys_id, 'camera');
+            }
+            await Painting.updateOne({ sys_id: this.sys_id },
+                { $set: { sensor: false, wheelchair: 0, height_adjust: false } });
+            await broadcastWS({
+                sys_id: this.sys_id, status: 'Inactive',
+                sensor: false, wheelchair: 0, height_adjust: false,
+            });
+        } catch (err) {
+            logger.error(`presenceService: shutdown reset failed: ${err.message}`);
+        }
     }
 
     start(sys_id = DEFAULT_SYS_ID) {
@@ -55,6 +85,28 @@ class PresenceService {
     }
 
     async poll() {
+        // מצב הציור קובע אם בכלל דוגמים
+        let painting;
+        try {
+            painting = await Painting.findOne({ sys_id: this.sys_id });
+        } catch (err) {
+            logger.warn(`presenceService: DB read failed (${err.message})`);
+            return;
+        }
+        const on = painting && painting.status === 'Active';
+        if (this.systemOn === null) this.systemOn = on;
+
+        if (!on) {
+            if (this.systemOn) { this.systemOn = false; await this.shutdownReset(); }
+            return;
+        }
+        if (!this.systemOn) {
+            this.systemOn = true;
+            this.readyAt = Date.now() + STARTUP_MS;
+            logger.info(`presenceService: system ON — warming up ${STARTUP_MS}ms`);
+        }
+        if (Date.now() < this.readyAt) return;
+
         let status;
         try {
             const res = await axios.get(STATUS_URL, { timeout: 2000 });
@@ -77,8 +129,13 @@ class PresenceService {
 
         if (!this.isPresent && this.presentStreak >= ARRIVE_STREAK) {
             this.isPresent = true;
+            // handleVisitorArrived does its own wheelchair detection and may
+            // publish a height command asynchronously. Start the cooldown
+            // clock now (rather than at 0) so the very next poll can't fire
+            // applyWheelchairState immediately and double up on it; leave
+            // lastCommand unset since we don't yet know what it published.
             this.lastCommand = null;
-            this.lastCommandAt = 0;
+            this.lastCommandAt = Date.now();
             try {
                 await this.mqttService.handleVisitorArrived(this.sys_id, 'camera');
             } catch (err) {
