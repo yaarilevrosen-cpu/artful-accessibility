@@ -180,7 +180,11 @@ class PresenceService {
             this.lastCommand = null;
             this.lastCommandAt = Date.now();
             try {
-                await this.mqttService.handleVisitorArrived(this.sys_id, 'camera');
+                // Pass this poll's already-fetched reading through so
+                // handleVisitorArrived doesn't need to trigger its own
+                // detection (it no longer starts ML-Stream's camera loop
+                // for the camera source — see mqttService.js).
+                await this.mqttService.handleVisitorArrived(this.sys_id, 'camera', !!status.detected);
             } catch (err) {
                 logger.error(`presenceService: handleVisitorArrived failed: ${err.message}`);
             }

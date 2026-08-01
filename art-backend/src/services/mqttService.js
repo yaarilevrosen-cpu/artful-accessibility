@@ -444,7 +444,16 @@ class MQTTService extends IMQTTService {
     // Shared by the MQTT 'sensor' topic (status 'in') and presenceService
     // (PRESENCE_SOURCE=camera). Deduplicates what used to be two nearly
     // identical first-view / returning-visit code paths.
-    async handleVisitorArrived(sys_id, source) {
+    //
+    // precomputedDetected: for source==='camera', presenceService already
+    // has a fresh wheelchair reading from the same /status poll that
+    // triggered this arrival. We use it instead of starting ML-Stream's
+    // continuous capture/detect loop (camera.startAnalyze), which is the
+    // sensor-only path — presenceService owns continuous re-evaluation for
+    // the camera path via its own poll loop (applyWheelchairState). Running
+    // both loops at once double-ran the model per frame and raced on the
+    // Painting doc / MQTT height commands.
+    async handleVisitorArrived(sys_id, source, precomputedDetected = false) {
         logger.info(chalk.green(`Person detected in range for ${sys_id} (source: ${source}).`));
 
         if (!this.paintingStatusMap.has(sys_id)) {
@@ -476,7 +485,9 @@ class MQTTService extends IMQTTService {
         paintingStatus.wheelchair = 1;
         await broadcastWS({ sys_id, ...paintingStatus });
 
-        const isDetected = await this.camera.startAnalyze(sys_id);
+        const isDetected = source === 'sensor'
+            ? await this.camera.startAnalyze(sys_id)
+            : { detected: !!precomputedDetected, reason: precomputedDetected ? 'wheelchair_detected' : 'not_detected' };
         logger.info('Detection result:', isDetected);
 
         if (isDetected?.detected) {
