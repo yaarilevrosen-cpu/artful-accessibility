@@ -3,5 +3,5 @@ node_modules/
 *.log
 __pycache__/
 *.pyc
-*.bak*.*
+*.bak*
 .env
