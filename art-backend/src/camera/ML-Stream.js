@@ -239,61 +239,6 @@ class CameraProcessor {
 
 
 
-// Function to send a Base64-encoded image to the ML API
-const detectWheelchair = async (base64Image) => {
-    try {
-        // Add data URI prefix if required by the API
-        const base64Data = `data:image/jpeg;base64,${base64Image}`;
-
-        // Send the request to the ML API
-        const response = await axios({
-            method: "POST",
-            url: "https://detect.roboflow.com/wheelchair-merged/1",
-            params: {
-                api_key: "2Oe0piuFz1O3lnbWZ10C",
-            },
-            data: base64Image, // Ensure proper encoding
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-        });
-
-        // console.log("Detection result:", response.data);
-        if(response.data)
-        return parse_response(response.data.predictions, 'normal')
-
-
-    } catch (error) {
-        console.error("Error detecting wheelchair:", error.message);
-    }
-};
-
-function parse_response(response, type= 'active') {
-    let prediction = null;
-console.log(response)
-    switch(type) {
-        case 'active':
-            prediction = response.predictions;
-            if (prediction.length > 0) { console.log(chalk.bgYellow('confidience: ', prediction[0].confidence)); }
-            break;
-        case 'normal':
-            prediction= response
-            if (prediction.length > 0) { console.log(chalk.bgYellow('confidience: ', prediction[0].confidence)); }
-            break;
-    }
-
-    if(
-        prediction.length > 0
-        && prediction[0].confidence > 0.60) {
-        console.log(chalk.green('detected wheelchair'))
-        return true
-    }else {
-        console.log(chalk.red('NO WHEELCHAIR!'));
-        return false;
-    }
-
-}
-
 async function detect_activeLearning(base64Image) {
     try {
         const hostIp = process.env.HOST_IP || '192.168.68.135';
