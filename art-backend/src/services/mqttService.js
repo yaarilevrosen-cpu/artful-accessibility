@@ -544,10 +544,16 @@ class MQTTService extends IMQTTService {
     async handleVisitorLeft(sys_id, source) {
         logger.info(chalk.yellow(`Person left range for ${sys_id} (source: ${source}).`));
 
-        // Check if the system is active
+        // Check if the system is active. activeSystems and cameraPromisesMap
+        // are updated in different places (ML-Stream.js) and can go out of
+        // sync during the async gap between the promise resolving on its
+        // own and the map being cleared — guard so a missing entry can't
+        // throw and skip the raise command below (the safety-critical one).
         if (this.camera.activeSystems.get(sys_id) === 'active') {
-            const { resolve } = this.camera.cameraPromisesMap.get(sys_id);
-            resolve({ detected: false, reason: 'manually_resolved' });
+            const entry = this.camera.cameraPromisesMap.get(sys_id);
+            if (entry) {
+                entry.resolve({ detected: false, reason: 'manually_resolved' });
+            }
             this.camera.stopCamera(sys_id);
         }
 
