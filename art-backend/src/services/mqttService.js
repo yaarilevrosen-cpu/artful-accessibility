@@ -181,9 +181,16 @@ class MQTTService extends IMQTTService {
                         console.error(`Error from device ${sys_id}:`, payload);
                         break;
 
-                    default:
-                        logger.info(`Unhandled subtopic: ${subTopic}`);
+                    default: {
+                        // אנחנו מנויים על m5stack/# ולכן מקבלים גם את מה
+                        // שאנחנו עצמנו מפרסמים — אין טעם לרשום את זה
+                        const SELF_PUBLISHED = ['height', 'get_frame', 'shutdown',
+                                                'restart', 'stop', 'start'];
+                        if (!SELF_PUBLISHED.includes(subTopic)) {
+                            logger.info(`Unhandled subtopic: ${subTopic}`);
+                        }
                         break;
+                    }
                 }
             } catch (error) {
                 console.error('Error processing message:', error);

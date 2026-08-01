@@ -29,6 +29,8 @@ const ARRIVE_STREAK = parseInt(process.env.PRESENCE_ARRIVE_STREAK || '3', 10);
 const LEAVE_STREAK = parseInt(process.env.PRESENCE_LEAVE_STREAK || '15', 10);
 const COOLDOWN_MS = parseInt(process.env.PRESENCE_COOLDOWN_MS || '5000', 10);
 const STARTUP_MS = parseInt(process.env.PRESENCE_STARTUP_MS || '6000', 10);
+// אחרי כמה קריאות כושלות ברציפות מחזירים את הציור למצב בטוח (למעלה)
+const FAIL_LIMIT = parseInt(process.env.PRESENCE_FAIL_LIMIT || '10', 10);
 const DEFAULT_SYS_ID = parseInt(process.env.PRESENCE_SYS_ID || '1784479996299', 10);
 
 class PresenceService {
@@ -43,6 +45,29 @@ class PresenceService {
         this.timer = null;
         this.systemOn = null;   // null = לא ידוע עדיין
         this.readyAt = 0;       // זמן סיום החימום
+        this.failStreak = 0;
+        this.failsafeDone = false;
+    }
+
+    async failsafeRaise(reason) {
+        if (this.failsafeDone) return;
+        this.failsafeDone = true;
+        logger.error(`presenceService: FAILSAFE — ${reason}; raising painting to default height`);
+        this.presentStreak = 0;
+        this.absentStreak = 0;
+        this.isPresent = false;
+        this.lastCommand = 0;
+        this.lastCommandAt = Date.now();
+        try {
+            await this.mqttService.sendHeightCommand(this.sys_id, 0);
+            await Painting.updateOne({ sys_id: this.sys_id },
+                { $set: { sensor: false, wheelchair: 0, height_adjust: false } });
+            await broadcastWS({
+                sys_id: this.sys_id, sensor: false, wheelchair: 0, height_adjust: false,
+            });
+        } catch (err) {
+            logger.error(`presenceService: failsafe failed: ${err.message}`);
+        }
     }
 
     async shutdownReset() {
@@ -116,8 +141,26 @@ class PresenceService {
             // streak counters, so a transient network blip can't erode
             // presentStreak/absentStreak and fire a spurious departure.
             logger.warn(`presenceService: inference server unreachable at ${STATUS_URL} (${err.message})`);
+            this.failStreak += 1;
+            if (this.failStreak >= FAIL_LIMIT) {
+                await this.failsafeRaise(`inference server unreachable x${this.failStreak}`);
+            }
             return;
         }
+
+        // מצלמה מדווחת על עצמה כתקולה — נספר גם את זה
+        if (status.camera_ok === false) {
+            this.failStreak += 1;
+            if (this.failStreak >= FAIL_LIMIT) {
+                await this.failsafeRaise(`camera reported not ok x${this.failStreak}`);
+            }
+            return;
+        }
+        if (this.failStreak > 0) {
+            logger.info('presenceService: inference server back, resuming');
+        }
+        this.failStreak = 0;
+        this.failsafeDone = false;
 
         if (status.present) {
             this.presentStreak += 1;
