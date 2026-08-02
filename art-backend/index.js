@@ -23,7 +23,6 @@ const paintingRoutes = require('./src/routes/PaintingRouter');
 const connectDB = require("./src/database/config");
 const {processFrame, processCamera, start_camera_analyze, deleteAllFrameFolders} = require("./src/camera/ML-Stream");
 const MQTTService = require("./src/services/mqttService");
-const {initializePaintingStats} = require("./src/models/PaintingStats");
 const {seedUsers} = require("./src/models/User");
 const {initializeWebSocket} = require("./src/services/websocketService");
 const {createServer} = require("node:http");
@@ -78,12 +77,11 @@ server.listen(PORT, async () => {
     await deleteAllFrameFolders();
     console.log("Connected to MongoDB");
 
-    // Camera-driven presence detection is opt-in and off by default so the
-    // ESP32 distance sensor flow (MQTT 'sensor' topic) keeps working
-    // unchanged unless this is deliberately switched on. One poller per
-    // painting that has a camera_device assigned; the manager rescans the
-    // paintings collection on a timer, so paintings added or (re)assigned a
-    // camera while the server is running are picked up without a restart.
+    // camera is the real default (PRESENCE_SOURCE=camera) — the ESP32 distance
+    // sensor hardware this used to gate on is retired. One poller per painting
+    // that has a camera_device assigned; the manager rescans the paintings
+    // collection on a timer, so paintings added or (re)assigned a camera while
+    // the server is running are picked up without a restart.
     if (process.env.PRESENCE_SOURCE === 'camera') {
         const presenceManager = new PresenceManager(paintingRoutes.mqttService);
         presenceManager.start();

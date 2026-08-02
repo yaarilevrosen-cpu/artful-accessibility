@@ -277,18 +277,25 @@ class PaintingController {
          
                         
                       
-            // Flatten the response to include the painting name at the top level
-            const flattenedStats = stats.map(stat => {
-                const statObject = stat.toObject(); // Convert Mongoose Document to plain object
-                return {
-                    ...statObject, // Include all original fields
-                    name: stat.painting_id?.name || stat.name, // Add the name field
-                };
-            });
-            console.log("flaten", flattenedStats)
-    
-          
-    
+            // Flatten the response to include the painting name at the top level.
+            // A stats doc whose painting_id no longer resolves (painting removed
+            // directly in the DB instead of via deletePainting, which preserves
+            // `name` before deleting) has no name to fall back on — populate()
+            // gives null and stat.name was never set. Without this, such a doc
+            // keeps its default isStill:true, survives the frontend's isStill
+            // filter, and renders "undefined" on the chart axis / stats table.
+            const flattenedStats = stats
+                .map(stat => {
+                    const statObject = stat.toObject(); // Convert Mongoose Document to plain object
+                    const paintingExists = !!stat.painting_id;
+                    return {
+                        ...statObject, // Include all original fields
+                        name: stat.painting_id?.name || stat.name, // Add the name field
+                        isStill: paintingExists ? statObject.isStill : false,
+                    };
+                })
+                .filter(stat => stat.name); // no resolvable name — nothing sensible to chart
+
             res.json({
                 success: true,
                 data: flattenedStats,

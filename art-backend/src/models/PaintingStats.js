@@ -175,33 +175,5 @@ paintingStatsSchema.statics.getStatsByDateRange = async function(startDate, endD
 };
 
 const PaintingStats = mongoose.model('Painting_Stats', paintingStatsSchema);
-module.exports = {PaintingStats,initializePaintingStats};
- 
-async function initializePaintingStats() {
-    // Get all paintings that don't have stats yet
-    const paintings = await Painting.find();
-    const {sys_id, _id  } = paintings[0];
-        const existingStats =
-            await PaintingStats.findOne({ sys_id: sys_id});
-
-        if (!existingStats) {
-            const newStats = new PaintingStats({
-                painting_id: _id,
-                sys_id: sys_id,
-                isStill: true, // Default to true
-            });
-            await newStats.save();
-        }
-
-     const stats = await PaintingStats.findOne({ sys_id: sys_id });
-     await stats.addViewingSession(new Date('2024-03-01T10:00:00'), new Date('2024-03-01T10:05:00'));
-
-// Get stats for a date range
-     const weeklyStats = await PaintingStats.getStatsByDateRange(
-         new Date('2024-03-01'),
-         new Date('2024-03-07')
-     );
-console.log(weeklyStats)
-}
-
+module.exports = {PaintingStats};
 
