@@ -24,7 +24,7 @@ function EditPaintingModalBody({ closeModal, extraObject }) {
   const [loading, setLoading] = useState(false);
   const [updatePainting,{data,isLoading,isSuccess}] = useUpdatePaintingMutation()
 
-  const { name, base_height, height, width, painter_name, photo, status ,weight,microcontroller} = paintingObj;
+  const { name, base_height, height, width, painter_name, photo, status ,weight,microcontroller,camera_device} = paintingObj;
 
   useEffect(() => {
     setPaintingObj(extraObject);
@@ -116,6 +116,14 @@ function EditPaintingModalBody({ closeModal, extraObject }) {
         updateType="microcontroller"
         containerStyle="mt-4"
         labelTitle="Microcontroller"
+        updateFormValue={updateFormValue}
+      />
+ <InputText
+        type="text"
+        defaultValue={camera_device}
+        updateType="camera_device"
+        containerStyle="mt-4"
+        labelTitle="Camera Device (/dev/v4l/by-id/... path, leave blank if none yet)"
         updateFormValue={updateFormValue}
       />
      {/* Status Selection Box */}

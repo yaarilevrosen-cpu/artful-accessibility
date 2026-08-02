@@ -108,7 +108,7 @@ class PaintingController {
             }
     
             // Destructure fields to be updated from the request body
-            const {  name,painter_name,base_height,height,width,status,photo,weight,microcontroller} = req.body.data;
+            const {  name,painter_name,base_height,height,width,status,photo,weight,microcontroller,camera_device} = req.body.data;
             // Update fields only if they are provided
                 painting.height = height;
                 painting.base_height = base_height;
@@ -118,8 +118,12 @@ class PaintingController {
                 painting.width = width;
                 painting.weight=weight;
                 painting.microcontroller=microcontroller;
+                // Empty string from the UI means "no camera assigned" — store
+                // as null so presenceManager's camera_device query (which
+                // excludes null/"") correctly treats it as unassigned.
+                painting.camera_device = camera_device ? camera_device.trim() : null;
                 if(photo)
-                painting.photo = photo; 
+                painting.photo = photo;
             
             console.log('Saving painting with updates:', painting);
             await painting.save(); // Save updated document to the database
