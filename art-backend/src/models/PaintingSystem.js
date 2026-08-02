@@ -43,6 +43,16 @@ const paintingSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    // Stable /dev/v4l/by-id/... path of this painting's camera on the
+    // Jetson. Null/unset means "no camera assigned" — presenceService
+    // skips this painting entirely rather than polling a camera it
+    // doesn't have. Never an index: USB enumeration order can change
+    // across reboots, by-id paths don't.
+    camera_device: {
+        type: String,
+        default: null,
+        trim: true
+    },
     status: {
         type: String,
         enum: ['Active', 'Inactive'],
