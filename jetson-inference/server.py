@@ -69,8 +69,8 @@ app.add_middleware(
 model = YOLO(MODEL_PATH)
 person_model = YOLO(PERSON_MODEL_PATH)
 
-_by_id = _glob.glob("/dev/v4l/by-id/*index0")
-_device = _by_id[0] if _by_id else 0
+from camera_resolve import resolve_camera_device
+_device = resolve_camera_device()
 camera = cv2.VideoCapture(_device)
 if not camera.isOpened():
     print("ERROR: no camera could be opened at", _device)
