@@ -30,13 +30,15 @@ services:
       # MQTT broker is reached over the Docker network by service name, not IP.
       - MQTT_BROKER_URL=mqtt://art_mosquitto
       # Inference server runs on the host (not in Docker), so it needs the host IP.
-      - HOST_IP=${HOST_IP:-192.168.68.135}
+      - HOST_IP=${HOST_IP:-jetson-host}
       # camera (default) = presenceService.js polls the inference server /status.
       # sensor = ESP32 distance sensor drives presence over MQTT. That
       # hardware is retired; kept selectable only in case it's reinstalled.
       - PRESENCE_SOURCE=${PRESENCE_SOURCE:-camera}
       # Optional full override of the /status URL presenceService polls (e.g. for testing).
       - PRESENCE_STATUS_URL=${PRESENCE_STATUS_URL:-}
+    extra_hosts:
+      - "jetson-host:host-gateway"
     volumes:
       - ./art-backend:/app
       - /app/node_modules

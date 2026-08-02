@@ -152,7 +152,7 @@ class CameraProcessor {
 
     async captureFrame(sys_id) {
         const axios = require('axios');
-        const hostIp = process.env.HOST_IP || '192.168.68.135';
+        const hostIp = process.env.HOST_IP || 'jetson-host';
         const response = await axios.get(`http://${hostIp}:5001/capture`);
         return response.data.image;
     }
@@ -241,7 +241,7 @@ class CameraProcessor {
 
 async function detect_activeLearning(base64Image) {
     try {
-        const hostIp = process.env.HOST_IP || '192.168.68.135';
+        const hostIp = process.env.HOST_IP || 'jetson-host';
         const response = await axios.post(`http://${hostIp}:5001/detect`, {
             image: base64Image
         }, {

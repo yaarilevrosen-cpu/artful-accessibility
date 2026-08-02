@@ -27,7 +27,7 @@ const logger = winston.createLogger({
     transports: [new winston.transports.Console()],
 });
 
-const HOST_IP = process.env.HOST_IP || '192.168.68.135';
+const HOST_IP = process.env.HOST_IP || 'jetson-host';
 const INFERENCE_BASE_URL = process.env.PRESENCE_INFERENCE_BASE_URL || `http://${HOST_IP}:5001`;
 // Full override for every poller's status URL, ignoring camera_device —
 // lets this be pointed at a single test double without touching HOST_IP
