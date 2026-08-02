@@ -264,6 +264,33 @@ class PaintingController {
         }
     }
 
+    // Kicks off the lower/hold/raise demo sequence and returns immediately —
+    // the sequence itself takes several seconds (see mqttService.runDemo) and
+    // the UI tracks its progress over the websocket demo:true/false flag
+    // rather than waiting on this request.
+    async runDemo(req, res) {
+        try {
+            const { sys_id } = req.params;
+            const painting = await Painting.findBySysId(sys_id);
+            if (!painting) {
+                return res.status(404).json({ success: false, error: 'Painting not found' });
+            }
+            if (this.mqttService.demoInProgress.has(parseInt(sys_id))) {
+                return res.status(409).json({ success: false, error: 'Demo already running for this painting' });
+            }
+            this.mqttService.runDemo(parseInt(sys_id)).catch((error) => {
+                console.error(`Demo run failed for ${sys_id}:`, error.message);
+            });
+            res.json({ success: true, message: 'Demo started' });
+        } catch (error) {
+            console.error('Error starting demo run:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
     async getStats(req, res) {
         try {
     

@@ -40,6 +40,11 @@ class MQTTService extends IMQTTService {
         this.frameCallbacks = new Map();
         this.devices = []
         this.camera = new CameraProcessor(this);
+        // sys_ids currently running a demo sequence (see runDemo). Real
+        // detection-driven state changes are suppressed for a painting while
+        // its sys_id is in this set, so a live visitor arriving/leaving during
+        // a demo can't race the demo's own lower/raise commands.
+        this.demoInProgress = new Set();
 
         this.mqttClient.on('connect', async () => {
             logger.info('Connected to MQTT broker');
@@ -483,6 +488,10 @@ class MQTTService extends IMQTTService {
     // both loops at once double-ran the model per frame and raced on the
     // Painting doc / MQTT height commands.
     async handleVisitorArrived(sys_id, source, precomputedDetected = false) {
+        if (this.demoInProgress.has(sys_id)) {
+            logger.info(`handleVisitorArrived(${sys_id}) skipped — demo run in progress.`);
+            return;
+        }
         logger.info(chalk.green(`Person detected in range for ${sys_id} (source: ${source}).`));
 
         if (!this.paintingStatusMap.has(sys_id)) {
@@ -545,6 +554,10 @@ class MQTTService extends IMQTTService {
 
     // Shared by the MQTT 'sensor' topic (status 'left') and presenceService.
     async handleVisitorLeft(sys_id, source) {
+        if (this.demoInProgress.has(sys_id)) {
+            logger.info(`handleVisitorLeft(${sys_id}) skipped — demo run in progress.`);
+            return;
+        }
         logger.info(chalk.yellow(`Person left range for ${sys_id} (source: ${source}).`));
 
         // Check if the system is active. activeSystems and cameraPromisesMap
@@ -608,6 +621,10 @@ class MQTTService extends IMQTTService {
     // (presenceService only — the sensor path only evaluates once on
     // arrival, per handleVisitorArrived, which is left unchanged).
     async applyWheelchairState(sys_id, detected) {
+        if (this.demoInProgress.has(sys_id)) {
+            logger.info(`applyWheelchairState(${sys_id}) skipped — demo run in progress.`);
+            return;
+        }
         logger.info(chalk.cyan(`presenceService re-evaluation for ${sys_id}: detected=${detected}`));
         if (!this.paintingStatusMap.has(sys_id)) {
             this.paintingStatusMap.set(sys_id, { wheelchair: 0, sensor: true, height_adjust: false });
@@ -636,6 +653,47 @@ class MQTTService extends IMQTTService {
 
         await painting.save();
         await broadcastWS({ sys_id, ...paintingStatus });
+    }
+
+    // Runs the lower -> hold -> raise sequence on demand, independent of any
+    // real detection, for live demos where the camera/lighting/visitor
+    // position can't be relied on. Deliberately does not touch
+    // wheelchair/sensor or PaintingStats — those mean "a real visitor was
+    // detected/viewing", which a demo run is not; only height_adjust moves,
+    // since the painting genuinely does move physically. Every step is
+    // logged with a "[DEMO]" tag and broadcast with demo:true so the UI and
+    // logs can never be mistaken for a real detection.
+    async runDemo(sys_id, holdMs = 5000) {
+        if (this.demoInProgress.has(sys_id)) {
+            throw new Error(`Demo already running for painting ${sys_id}`);
+        }
+        const painting = await Painting.findOne({ sys_id });
+        if (!painting) {
+            throw new Error(`Painting not found for sys_id: ${sys_id}`);
+        }
+
+        this.demoInProgress.add(sys_id);
+        try {
+            logger.info(chalk.magenta(`[DEMO] Starting demo run for painting ${sys_id}: lower -> hold ${holdMs}ms -> raise`));
+            await broadcastWS({ sys_id, demo: true });
+
+            await this.sendHeightCommand(sys_id, 1);
+            painting.height_adjust = true;
+            await painting.save();
+            await broadcastWS({ sys_id, demo: true, height_adjust: true });
+            logger.info(chalk.magenta(`[DEMO] Painting ${sys_id} lowered — holding for ${holdMs}ms`));
+
+            await sleep(holdMs);
+
+            logger.info(chalk.magenta(`[DEMO] Raising painting ${sys_id}`));
+            await this.sendHeightCommand(sys_id, 0);
+            painting.height_adjust = false;
+            await painting.save();
+            await broadcastWS({ sys_id, demo: false, height_adjust: false });
+            logger.info(chalk.magenta(`[DEMO] Demo run complete for painting ${sys_id}`));
+        } finally {
+            this.demoInProgress.delete(sys_id);
+        }
     }
 
 }
