@@ -27,7 +27,7 @@ const {initializePaintingStats} = require("./src/models/PaintingStats");
 const {seedUsers} = require("./src/models/User");
 const {initializeWebSocket} = require("./src/services/websocketService");
 const {createServer} = require("node:http");
-const {PresenceService} = require("./src/services/presenceService");
+const {PresenceManager} = require("./src/services/presenceService");
 
 // middleware/auth.js
 const isAuthenticated = (req, res, next) => {
@@ -80,13 +80,16 @@ server.listen(PORT, async () => {
 
     // Camera-driven presence detection is opt-in and off by default so the
     // ESP32 distance sensor flow (MQTT 'sensor' topic) keeps working
-    // unchanged unless this is deliberately switched on.
+    // unchanged unless this is deliberately switched on. One poller per
+    // painting that has a camera_device assigned; the manager rescans the
+    // paintings collection on a timer, so paintings added or (re)assigned a
+    // camera while the server is running are picked up without a restart.
     if (process.env.PRESENCE_SOURCE === 'camera') {
-        const presenceService = new PresenceService(paintingRoutes.mqttService);
-        presenceService.start();
-        console.log('PRESENCE_SOURCE=camera: presenceService started');
+        const presenceManager = new PresenceManager(paintingRoutes.mqttService);
+        presenceManager.start();
+        console.log('PRESENCE_SOURCE=camera: presenceManager started');
     } else {
-        console.log(`PRESENCE_SOURCE=${process.env.PRESENCE_SOURCE || 'sensor'}: presenceService not started (sensor-driven flow only)`);
+        console.log(`PRESENCE_SOURCE=${process.env.PRESENCE_SOURCE || 'sensor'}: presenceManager not started (sensor-driven flow only)`);
     }
 });
 

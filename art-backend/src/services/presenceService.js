@@ -1,8 +1,16 @@
-// Polls the Jetson inference server's /status endpoint and drives the same
-// arrival/departure logic the ESP32 distance sensor drives over MQTT
-// ('sensor' topic, status 'in'/'left'). Only runs when PRESENCE_SOURCE=camera
-// (see index.js) — with PRESENCE_SOURCE unset/'sensor' this module is never
-// instantiated, so the existing sensor-driven flow is completely unaffected.
+// One PresencePoller per painting that has a camera assigned, each polling
+// that camera's own /status endpoint on the Jetson inference server and
+// driving the same arrival/departure logic the ESP32 distance sensor drives
+// over MQTT ('sensor' topic, status 'in'/'left'). Only runs when
+// PRESENCE_SOURCE=camera (see index.js) — with PRESENCE_SOURCE unset/'sensor'
+// this module is never instantiated, so the existing sensor-driven flow is
+// completely unaffected.
+//
+// PresenceManager owns the fleet: it rescans the paintings collection on a
+// timer and starts/stops pollers as paintings gain/lose a camera_device, so
+// adding a painting (or flipping camera_device) is picked up without a
+// restart. One painting's poller crashing, or its camera being unreachable,
+// never touches any other painting's poller.
 const axios = require('axios');
 const winston = require('winston');
 const Painting = require('../models/PaintingSystem');
@@ -20,9 +28,11 @@ const logger = winston.createLogger({
 });
 
 const HOST_IP = process.env.HOST_IP || '192.168.68.135';
-// Override lets this be pointed at a test double without touching HOST_IP
-// (which other services also rely on).
-const STATUS_URL = process.env.PRESENCE_STATUS_URL || `http://${HOST_IP}:5001/status`;
+const INFERENCE_BASE_URL = process.env.PRESENCE_INFERENCE_BASE_URL || `http://${HOST_IP}:5001`;
+// Full override for every poller's status URL, ignoring camera_device —
+// lets this be pointed at a single test double without touching HOST_IP
+// or per-painting camera_device values. Same env var as before multi-camera.
+const STATUS_URL_OVERRIDE = process.env.PRESENCE_STATUS_URL || null;
 
 const POLL_MS = 500;
 const ARRIVE_STREAK = parseInt(process.env.PRESENCE_ARRIVE_STREAK || '3', 10);
@@ -31,12 +41,15 @@ const COOLDOWN_MS = parseInt(process.env.PRESENCE_COOLDOWN_MS || '5000', 10);
 const STARTUP_MS = parseInt(process.env.PRESENCE_STARTUP_MS || '6000', 10);
 // אחרי כמה קריאות כושלות ברציפות מחזירים את הציור למצב בטוח (למעלה)
 const FAIL_LIMIT = parseInt(process.env.PRESENCE_FAIL_LIMIT || '10', 10);
-const DEFAULT_SYS_ID = parseInt(process.env.PRESENCE_SYS_ID || '1784479996299', 10);
+// How often the manager re-reads the paintings collection to notice
+// paintings that gained/lost a camera_device or were added/removed.
+const RESCAN_MS = parseInt(process.env.PRESENCE_RESCAN_MS || '5000', 10);
 
-class PresenceService {
-    constructor(mqttService) {
+class PresencePoller {
+    constructor(mqttService, sys_id, statusUrl) {
         this.mqttService = mqttService;
-        this.sys_id = DEFAULT_SYS_ID;
+        this.sys_id = sys_id;
+        this.statusUrl = statusUrl;
         this.presentStreak = 0;
         this.absentStreak = 0;
         this.isPresent = false;
@@ -52,7 +65,7 @@ class PresenceService {
     async failsafeRaise(reason) {
         if (this.failsafeDone) return;
         this.failsafeDone = true;
-        logger.error(`presenceService: FAILSAFE — ${reason}; raising painting to default height`);
+        logger.error(`presencePoller[${this.sys_id}]: FAILSAFE — ${reason}; raising painting to default height`);
         this.presentStreak = 0;
         this.absentStreak = 0;
         this.isPresent = false;
@@ -66,12 +79,12 @@ class PresenceService {
                 sys_id: this.sys_id, sensor: false, wheelchair: 0, height_adjust: false,
             });
         } catch (err) {
-            logger.error(`presenceService: failsafe failed: ${err.message}`);
+            logger.error(`presencePoller[${this.sys_id}]: failsafe failed: ${err.message}`);
         }
     }
 
     async shutdownReset() {
-        logger.info('presenceService: system OFF — resetting painting state');
+        logger.info(`presencePoller[${this.sys_id}]: system OFF — resetting painting state`);
         this.presentStreak = 0;
         this.absentStreak = 0;
         this.lastCommand = null;
@@ -89,17 +102,17 @@ class PresenceService {
                 sensor: false, wheelchair: 0, height_adjust: false,
             });
         } catch (err) {
-            logger.error(`presenceService: shutdown reset failed: ${err.message}`);
+            logger.error(`presencePoller[${this.sys_id}]: shutdown reset failed: ${err.message}`);
         }
     }
 
-    start(sys_id = DEFAULT_SYS_ID) {
-        this.sys_id = sys_id;
+    start() {
         if (this.timer) return; // already running
         this.timer = setInterval(() => {
-            this.poll().catch((err) => logger.error(`presenceService poll crashed: ${err.message}`));
+            this.poll().catch((err) => logger.error(`presencePoller[${this.sys_id}] poll crashed: ${err.message}`));
         }, POLL_MS);
-        logger.info(`presenceService started for sys_id ${sys_id} (arrive>=${ARRIVE_STREAK}, leave>=${LEAVE_STREAK}, cooldown=${COOLDOWN_MS}ms)`);
+        logger.info(`presencePoller[${this.sys_id}] started -> ${this.statusUrl} `
+            + `(arrive>=${ARRIVE_STREAK}, leave>=${LEAVE_STREAK}, cooldown=${COOLDOWN_MS}ms)`);
     }
 
     stop() {
@@ -115,7 +128,7 @@ class PresenceService {
         try {
             painting = await Painting.findOne({ sys_id: this.sys_id });
         } catch (err) {
-            logger.warn(`presenceService: DB read failed (${err.message})`);
+            logger.warn(`presencePoller[${this.sys_id}]: DB read failed (${err.message})`);
             return;
         }
         const on = painting && painting.status === 'Active';
@@ -128,19 +141,19 @@ class PresenceService {
         if (!this.systemOn) {
             this.systemOn = true;
             this.readyAt = Date.now() + STARTUP_MS;
-            logger.info(`presenceService: system ON — warming up ${STARTUP_MS}ms`);
+            logger.info(`presencePoller[${this.sys_id}]: system ON — warming up ${STARTUP_MS}ms`);
         }
         if (Date.now() < this.readyAt) return;
 
         let status;
         try {
-            const res = await axios.get(STATUS_URL, { timeout: 2000 });
+            const res = await axios.get(this.statusUrl, { timeout: 2000 });
             status = res.data;
         } catch (err) {
             // Inference server unreachable: log and bail without touching the
             // streak counters, so a transient network blip can't erode
             // presentStreak/absentStreak and fire a spurious departure.
-            logger.warn(`presenceService: inference server unreachable at ${STATUS_URL} (${err.message})`);
+            logger.warn(`presencePoller[${this.sys_id}]: inference server unreachable at ${this.statusUrl} (${err.message})`);
             this.failStreak += 1;
             if (this.failStreak >= FAIL_LIMIT) {
                 await this.failsafeRaise(`inference server unreachable x${this.failStreak}`);
@@ -148,16 +161,17 @@ class PresenceService {
             return;
         }
 
-        // מצלמה מדווחת על עצמה כתקולה — נספר גם את זה
+        // מצלמה מדווחת על עצמה כתקולה — נספר גם את זה (כולל "unknown camera",
+        // שקורה כשה-camera_device לא תואם אף worker על שרת ה-inference)
         if (status.camera_ok === false) {
             this.failStreak += 1;
             if (this.failStreak >= FAIL_LIMIT) {
-                await this.failsafeRaise(`camera reported not ok x${this.failStreak}`);
+                await this.failsafeRaise(`camera reported not ok x${this.failStreak}${status.error ? ` (${status.error})` : ''}`);
             }
             return;
         }
         if (this.failStreak > 0) {
-            logger.info('presenceService: inference server back, resuming');
+            logger.info(`presencePoller[${this.sys_id}]: inference server back, resuming`);
         }
         this.failStreak = 0;
         this.failsafeDone = false;
@@ -188,7 +202,7 @@ class PresenceService {
                 // for the camera source — see mqttService.js).
                 await this.mqttService.handleVisitorArrived(this.sys_id, 'camera', !!status.detected);
             } catch (err) {
-                logger.error(`presenceService: handleVisitorArrived failed: ${err.message}`);
+                logger.error(`presencePoller[${this.sys_id}]: handleVisitorArrived failed: ${err.message}`);
             }
             return;
         }
@@ -198,7 +212,7 @@ class PresenceService {
             try {
                 await this.mqttService.handleVisitorLeft(this.sys_id, 'camera');
             } catch (err) {
-                logger.error(`presenceService: handleVisitorLeft failed: ${err.message}`);
+                logger.error(`presencePoller[${this.sys_id}]: handleVisitorLeft failed: ${err.message}`);
             }
             return;
         }
@@ -224,9 +238,88 @@ class PresenceService {
         try {
             await this.mqttService.applyWheelchairState(this.sys_id, !!status.detected);
         } catch (err) {
-            logger.error(`presenceService: applyWheelchairState failed: ${err.message}`);
+            logger.error(`presencePoller[${this.sys_id}]: applyWheelchairState failed: ${err.message}`);
         }
     }
 }
 
-module.exports = { PresenceService };
+class PresenceManager {
+    constructor(mqttService) {
+        this.mqttService = mqttService;
+        this.pollers = new Map(); // sys_id -> PresencePoller
+        this.rescanTimer = null;
+    }
+
+    _statusUrlFor(painting) {
+        if (STATUS_URL_OVERRIDE) return STATUS_URL_OVERRIDE;
+        return `${INFERENCE_BASE_URL}/status?device=${encodeURIComponent(painting.camera_device)}`;
+    }
+
+    async rescan() {
+        let paintings;
+        try {
+            // A painting only gets a poller once it has a camera assigned.
+            // Active/Inactive is handled inside the poller itself (it already
+            // warms up / resets cleanly on toggle) — the manager only cares
+            // whether polling this painting's camera makes sense at all.
+            paintings = await Painting.find({ camera_device: { $exists: true, $ne: null, $ne: '' } });
+        } catch (err) {
+            logger.warn(`presenceManager: DB read failed during rescan (${err.message})`);
+            return;
+        }
+
+        const seen = new Set();
+        for (const painting of paintings) {
+            seen.add(painting.sys_id);
+            const existing = this.pollers.get(painting.sys_id);
+            const statusUrl = this._statusUrlFor(painting);
+            if (!existing) {
+                const poller = new PresencePoller(this.mqttService, painting.sys_id, statusUrl);
+                this.pollers.set(painting.sys_id, poller);
+                poller.start();
+                logger.info(`presenceManager: new poller for sys_id ${painting.sys_id} `
+                    + `(camera_device=${painting.camera_device})`);
+            } else if (existing.statusUrl !== statusUrl) {
+                // camera_device was changed on an already-polled painting —
+                // point the existing poller at its new camera without
+                // dropping its debounce/cooldown state.
+                logger.info(`presenceManager: sys_id ${painting.sys_id} camera_device changed, `
+                    + `repointing poller (${existing.statusUrl} -> ${statusUrl})`);
+                existing.statusUrl = statusUrl;
+            }
+        }
+
+        for (const [sys_id, poller] of this.pollers) {
+            if (!seen.has(sys_id)) {
+                logger.info(`presenceManager: painting ${sys_id} no longer has a camera assigned — stopping its poller`);
+                try {
+                    if (poller.isPresent) await poller.shutdownReset();
+                } catch (err) {
+                    logger.error(`presenceManager: shutdownReset failed for ${sys_id}: ${err.message}`);
+                }
+                poller.stop();
+                this.pollers.delete(sys_id);
+            }
+        }
+    }
+
+    start() {
+        if (this.rescanTimer) return; // already running
+        this.rescan().catch((err) => logger.error(`presenceManager: initial rescan failed: ${err.message}`));
+        this.rescanTimer = setInterval(() => {
+            this.rescan().catch((err) => logger.error(`presenceManager: rescan crashed: ${err.message}`));
+        }, RESCAN_MS);
+        logger.info(`presenceManager started (rescan every ${RESCAN_MS}ms)`);
+    }
+
+    stop() {
+        if (this.rescanTimer) {
+            clearInterval(this.rescanTimer);
+            this.rescanTimer = null;
+        }
+        for (const poller of this.pollers.values()) poller.stop();
+        this.pollers.clear();
+    }
+}
+
+module.exports = { PresenceManager, PresencePoller };
