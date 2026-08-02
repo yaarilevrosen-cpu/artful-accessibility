@@ -521,9 +521,9 @@ class MQTTService extends IMQTTService {
                 painting.height_adjust = true;
                 paintingStatus.height_adjust = true;
 
-                // Send height command to M5Stack - MOVE DOWN for wheelchair
-                this.sendHeightCommand(sys_id, 1);
-                logger.info(chalk.blue(`🎯 WHEELCHAIR DETECTED! Sending M5Stack command: MOVE DOWN`));
+                // publish_height() above already published the DOWN command —
+                // calling sendHeightCommand again here published it twice.
+                logger.info(chalk.blue(`🎯 WHEELCHAIR DETECTED! MOVE DOWN published`));
             }
 
             painting.wheelchair = 2;
@@ -563,18 +563,26 @@ class MQTTService extends IMQTTService {
         const paintingStatus = this.paintingStatusMap.get(sys_id);
 
         // Handle leaving logic
+        const wasLowered = paintingStatus.height_adjust === true || paintingStatus.wheelchair === 2;
         paintingStatus.sensor = false;
         paintingStatus.wheelchair = 0;
         paintingStatus.height_adjust = false;
 
         const painting = await Painting.findOne({ sys_id });
+        const wasLoweredDb = painting.height_adjust === true || painting.wheelchair === 2;
         painting.sensor = false;
         painting.wheelchair = 0;
         painting.height_adjust = false;
 
-        // Send height command to M5Stack - MOVE UP when person leaves
-        this.sendHeightCommand(sys_id, 0);
-        logger.info(chalk.blue(`👋 PERSON LEFT! Sending M5Stack command: MOVE UP`));
+        // Only raise if the painting is actually down. applyWheelchairState may
+        // already have raised it the moment detection dropped; publishing again
+        // here sent a second identical UP a few seconds later.
+        if (wasLowered || wasLoweredDb) {
+            this.sendHeightCommand(sys_id, 0);
+            logger.info(chalk.blue(`👋 PERSON LEFT! Sending M5Stack command: MOVE UP`));
+        } else {
+            logger.info(chalk.gray(`👋 PERSON LEFT! Painting already raised — no command sent.`));
+        }
 
         // Update stats if there's an ongoing session
         const stats = await PaintingStats.findOne({ sys_id });

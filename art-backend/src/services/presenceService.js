@@ -177,7 +177,9 @@ class PresenceService {
             // clock now (rather than at 0) so the very next poll can't fire
             // applyWheelchairState immediately and double up on it; leave
             // lastCommand unset since we don't yet know what it published.
-            this.lastCommand = null;
+            // Record what handleVisitorArrived is about to publish, so the
+            // next poll's cooldown check doesn't re-send the same command.
+            this.lastCommand = status.detected ? 1 : 0;
             this.lastCommandAt = Date.now();
             try {
                 // Pass this poll's already-fetched reading through so
