@@ -1,0 +1,7 @@
+[
+  {
+    "label": "default",
+    "device_glob": "/dev/v4l/by-id/*index0",
+    "allow_index_fallback": true
+  }
+]
