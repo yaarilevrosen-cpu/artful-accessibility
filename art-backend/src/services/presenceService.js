@@ -262,7 +262,11 @@ class PresenceManager {
             // Active/Inactive is handled inside the poller itself (it already
             // warms up / resets cleanly on toggle) — the manager only cares
             // whether polling this painting's camera makes sense at all.
-            paintings = await Painting.find({ camera_device: { $exists: true, $ne: null, $ne: '' } });
+            // $nin, not two $ne keys on one object literal — the latter
+            // silently collapses to one key in JS ({a:1,a:2} keeps only the
+            // last), which let camera_device: null slip through and start a
+            // poller pointed at "?device=null".
+            paintings = await Painting.find({ camera_device: { $exists: true, $nin: [null, ''] } });
         } catch (err) {
             logger.warn(`presenceManager: DB read failed during rescan (${err.message})`);
             return;
