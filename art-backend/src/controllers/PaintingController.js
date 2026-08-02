@@ -235,7 +235,9 @@ class PaintingController {
             // command isn't invisible to startup reconciliation (FIX 3) —
             // otherwise a manual "lower" leaves the DB saying the painting
             // is up even though it physically isn't.
-            painting.wheelchair = value ? 2 : 0;
+            // Only height_adjust reflects physical position. wheelchair means
+            // "a wheelchair user was DETECTED" — a manual button press is not
+            // a detection, so leave it alone or the UI claims a false detection.
             painting.height_adjust = !!value;
             await painting.save();
             await broadcastWS({
