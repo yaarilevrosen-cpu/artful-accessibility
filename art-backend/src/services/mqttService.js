@@ -43,8 +43,11 @@ class MQTTService extends IMQTTService {
 
         this.mqttClient.on('connect', async () => {
             logger.info('Connected to MQTT broker');
-            const result = await Painting.updateMany({}, { $set: { status: 'Inactive' } });
-            logger.info(`${result.modifiedCount} paintings updated to "Inactive".`);
+            // Paintings keep whatever on/off state they were left in. Forcing
+            // every painting Inactive here meant nothing worked after a restart
+            // until someone re-enabled each one by hand from the UI.
+            const active = await Painting.countDocuments({ status: 'Active' });
+            logger.info(`Painting states preserved across restart — ${active} active.`);
 
             // Startup/reconnect reconciliation (FIX 3): isPresent (and every
             // in-memory presence flag) always starts false on a fresh
