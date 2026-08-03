@@ -5,10 +5,12 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { useDispatch } from "react-redux";
 import AdminSidebar from "../routes/AdminSideBar";
 import WorkerSidebar from "../routes/WorkerSideBar";
+import { useTranslation } from "../i18n";
 
 function LeftSidebar() {
   const location = useLocation();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const user = JSON.parse(localStorage.getItem("user"));
   const routes = user.role === "admin" ? AdminSidebar : WorkerSidebar; // Dynamically select routes
   
@@ -30,13 +32,13 @@ function LeftSidebar() {
         </button>
 
         {/* Logo and Title */}
-        <div className="flex items-center mb-4 space-x-3 text-xl font-semibold text-gray-800">
+        <div className="flex items-center mb-4 gap-3 text-xl font-semibold text-gray-800">
           <img
             className="mask mask-squircle w-10 h-10 object-cover"
             src="/logo192.png"
-            alt="Hecht Museum Logo"
+            alt={t("sidebar.logoAlt")}
           />
-          <span className="text-black-600">The Hecht Museum</span>
+          <span className="text-black-600">{t("sidebar.museumName")}</span>
         </div>
 
         {/* Sidebar Routes */}
@@ -49,7 +51,7 @@ function LeftSidebar() {
   end
   to={route.path}
   className={({ isActive }) =>
-    `group flex items-center space-x-3 py-3 px-4 rounded-md border 
+    `group flex items-center gap-3 py-3 px-4 rounded-md border
     ${
       isActive
         ? "bg-blue-500 text-white font-bold border-blue-500"
@@ -59,7 +61,7 @@ function LeftSidebar() {
   }
 >
   <span>{route.icon}</span>
-  <span className="text-md font-medium">{route.name}</span>
+  <span className="text-md font-medium">{t(route.name)}</span>
 </NavLink>
 
             )}

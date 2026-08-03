@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "../../../i18n";
 
 const PaintingDetailsModalBody = ({ closeModal, extraObject }) => {
+    const { t } = useTranslation();
     const height_adjustt = ((extraObject.height / 2) + extraObject.base_height)-125  ;
 
     return (
@@ -8,7 +10,7 @@ const PaintingDetailsModalBody = ({ closeModal, extraObject }) => {
             <p>
                 <img
                     src={extraObject.photo || "placeholder.jpg"}
-                    alt={extraObject.photo ? `${extraObject.name}'s painting` : "No photo available"}
+                    alt={extraObject.photo ? t('modal.details.photoAlt', { name: extraObject.name }) : t('modal.details.noPhoto')}
                     style={{
                         height: "200px",
                         objectFit: "cover",
@@ -21,44 +23,44 @@ const PaintingDetailsModalBody = ({ closeModal, extraObject }) => {
             </p>
             <div className="grid grid-cols-2 gap-4 text-sm text-gray-700 text-black dark:text-white">
                 <p>
-                    <strong>Id:</strong> {extraObject.sys_id || "N/A"}
+                    <strong>{t('modal.details.id')}</strong> {extraObject.sys_id || t('common.na')}
                 </p>
                 <p>
-                    <strong>Painter:</strong> {extraObject.painter_name || "N/A"}
+                    <strong>{t('modal.details.painter')}</strong> {extraObject.painter_name || t('common.na')}
                 </p>
                 <p>
-                    <strong>Base Height:</strong> {extraObject.base_height} cm
+                    <strong>{t('modal.details.baseHeight')}</strong> {extraObject.base_height} {t('modal.details.cm')}
                 </p>
                 <p>
-                    <strong>Height:</strong> {extraObject.height} cm
+                    <strong>{t('modal.details.height')}</strong> {extraObject.height} {t('modal.details.cm')}
                 </p>
                 <p>
-                    <strong>Width:</strong> {extraObject.width} cm
+                    <strong>{t('modal.details.width')}</strong> {extraObject.width} {t('modal.details.cm')}
                 </p>
                 <p>
-                    <strong>Weight:</strong> {extraObject.weight || "N/A"} kg
+                    <strong>{t('modal.details.weight')}</strong> {extraObject.weight || t('common.na')} {t('modal.details.kg')}
                 </p>
                 <p>
-                    <strong>Microcontroller:</strong> {extraObject.microcontroller || "N/A"}
+                    <strong>{t('modal.details.microcontroller')}</strong> {extraObject.microcontroller || t('common.na')}
                 </p>
-              
+
                 <p>
-                    <strong>Height Adjustment:</strong> 
-                    {height_adjustt > 0 ? height_adjustt + ' cm' : " No adjust"} 
+                    <strong>{t('modal.details.heightAdjustment')}</strong>
+                    {height_adjustt > 0 ? `${height_adjustt} ${t('modal.details.cm')}` : t('modal.details.noAdjust')}
                 </p>
                 <p>
-                    <strong>Optimal Viewing Distance:</strong>{" "}
-                    {Math.round(Math.sqrt(Math.pow(extraObject.width, 2) + Math.pow(extraObject.height, 2)) * 1.5)} cm
+                    <strong>{t('modal.details.optimalDistance')}</strong>{" "}
+                    {Math.round(Math.sqrt(Math.pow(extraObject.width, 2) + Math.pow(extraObject.height, 2)) * 1.5)} {t('modal.details.cm')}
                 </p>
-                
+
             </div>
 
-            <div className="text-right mt-4">
+            <div className="text-end mt-4">
                 <button
                     className="bg-blue-500 text-black font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition duration-200"
                     onClick={closeModal}
                 >
-                    Close
+                    {t('common.close')}
                 </button>
             </div>
         </div>

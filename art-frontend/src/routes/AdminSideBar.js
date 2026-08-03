@@ -9,43 +9,46 @@ import { PresentationChartLineIcon } from '@heroicons/react/24/outline';
 
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
+// `name` holds a translation key, not literal text - the sidebar lives
+// outside any component (module-level array), so it can't call
+// useTranslation() itself; LeftSidebar/SidebarSubmenu look the key up.
 const AdminSidebar = [
- 
+
   {    path: '/admin/Welcome', // url
   icon: <HomeIcon className={iconClasses}/>, // icon component
-  name: 'Welcome', // name that appear in Sidebar
+  name: 'sidebar.welcome',
   },
   {
     path: '/admin/Paintings', // url
     icon: <InboxArrowDownIcon className={iconClasses}/>, // icon component
-    name: 'Manage Paintings', // name that appear in Sidebar
+    name: 'sidebar.managePaintings',
   },
-  
+
   {
    path: '/admin/charts', // url
    icon: <ChartBarIcon className={iconClasses}/>, // icon component
-   name: 'Analytics', // name that appear in Sidebar
-   submenu : [ 
+   name: 'sidebar.analytics',
+   submenu : [
       {
           path: '/admin/Livecharts',
           icon: <PresentationChartLineIcon  className={submenuIconClasses}/>,
-          name: 'Live Charts',
+          name: 'sidebar.liveCharts',
         },
       {
         path: '/admin/history',
         icon: <ArchiveBoxIcon className={submenuIconClasses}/>,
-        name: 'History',
-      },   
+        name: 'sidebar.history',
+      },
     ]
    },
    {
     path: '/admin/LiveDetection', // url
     icon: <VideoCameraIcon className={iconClasses}/>, // icon component
-    name: 'Live Detection', // name that appear in Sidebar
+    name: 'sidebar.liveDetection',
    },
    {    path: '/admin/HelpAdmin', // url
     icon: <QuestionMarkCircleIcon className={iconClasses} />, // icon component
-    name: 'Help', // name that appear in Sidebar
+    name: 'sidebar.help',
     },
 ]
 

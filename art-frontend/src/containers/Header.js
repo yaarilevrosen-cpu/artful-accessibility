@@ -8,6 +8,8 @@ import MoonIcon from "@heroicons/react/24/outline/MoonIcon";
 import SunIcon from "@heroicons/react/24/outline/SunIcon";
 import { openRightDrawer } from "../features/common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../utils/globalConstantUtil";
+import LanguageIcon from "@heroicons/react/24/outline/LanguageIcon";
+import { useTranslation } from "../i18n";
 
 function Header() {
   const dispatch = useDispatch();
@@ -15,6 +17,7 @@ function Header() {
   const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("theme"));
   const [username, setUsername] = useState(""); // State to hold username
   const nav = useNavigate();
+  const { t, language, toggleLanguage } = useTranslation();
 
   useEffect(() => {
     // Initialize themeChange and username on component mount
@@ -70,9 +73,21 @@ function Header() {
   </div>
         {/* Right-Side Elements */}
         <div className="flex-none flex items-center gap-4">
+            {/* Language Toggle */}
+          <button
+            onClick={toggleLanguage}
+            aria-label={t("header.toggleLanguageAria")}
+            className="btn btn-ghost gap-1 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            <LanguageIcon className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+            <span className="text-sm font-semibold">
+              {language === "en" ? t("language.he") : t("language.en")}
+            </span>
+          </button>
             {/* Light/Dark Theme Toggle */}
           <button
             onClick={toggleTheme}
+            aria-label={t("header.toggleThemeAria")}
             className="btn btn-ghost btn-circle hover:bg-gray-200 dark:hover:bg-gray-700  transition-colors"
           >
             {currentTheme === "dark" ? (
@@ -115,7 +130,7 @@ function Header() {
               <li>
   {/* Greeting Message */}
   <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-    Hello, {username}
+    {t("header.helloUser", { username })}
   </span>
 </li>
 <div className="divider my-1"></div>
@@ -125,7 +140,7 @@ function Header() {
     onClick={logoutUser}
     className="text-red-600 dark:text-red-400 border border-red-600 hover:text-white hover:bg-red-600 dark:hover:bg-red-800 py-2 px-5 rounded-md cursor-pointer transition duration-100 ease-in-out"
   >
-    Logout
+    {t("header.logout")}
   </a>
 </li>
 

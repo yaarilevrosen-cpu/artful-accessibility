@@ -1,15 +1,10 @@
 function NotificationBodyRightDrawer(){
-    /*return(
-        <>
-             {
-                [...Array(15)].map((_, i) => {
-                    return <div key={i} className={"grid mt-3 card bg-base-200 rounded-box p-3" + (i < 5 ? " bg-blue-100" : "")}>
-                           
-                        </div> 
-                })
-            }
-        </>
-    )*/
+    // The notification bell that would open this drawer is currently
+    // commented out in Header.js, so this never actually mounts today - but
+    // a function component returning undefined (no return statement at all)
+    // throws as soon as something does render it. Return null so re-enabling
+    // the bell later doesn't immediately crash.
+    return null;
 }
 
 export default NotificationBodyRightDrawer

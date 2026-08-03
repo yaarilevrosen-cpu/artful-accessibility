@@ -2,15 +2,17 @@ import ChevronDownIcon from '@heroicons/react/24/outline/ChevronDownIcon';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../i18n';
 
-function SidebarSubmenu({ submenu, name, icon },buttonClass) {
+function SidebarSubmenu({ submenu, name, icon }) {
     const location = useLocation();
     const [isExpanded, setIsExpanded] = useState(false);
     const navigate = useNavigate();
+    const { t } = useTranslation();
     /** Open Submenu list if path found in routes, this is for directly loading submenu routes first time */
 
     const sidebarButtonClass = `
-    w-full group flex items-center space-x-4 py-3 px-4 rounded-md border 
+    w-full group flex items-center gap-4 py-3 px-4 rounded-md border
     shadow-sm transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
 `;
 
@@ -25,10 +27,7 @@ function SidebarSubmenu({ submenu, name, icon },buttonClass) {
 
     function redirect (){
         setIsExpanded(!isExpanded)
-        console.log("here")
-
-            navigate('/admin/Livecharts');
-
+        navigate('/admin/Livecharts');
     }
     return (
         <div className="flex flex-col "
@@ -45,9 +44,9 @@ function SidebarSubmenu({ submenu, name, icon },buttonClass) {
                 onClick={() => redirect()}
             >
                 <span className="flex-shrink-0">{icon}</span>
-                <span className="text-md font-medium flex-grow">{name}</span>
+                <span className="text-md font-medium flex-grow">{t(name)}</span>
                 <ChevronDownIcon
-                    className={`w-5 h-5 ml-auto transform transition-transform duration-500 ${
+                    className={`w-5 h-5 ms-auto transform transition-transform duration-500 ${
                         isExpanded ? "rotate-180" : ""
                     }`}
                 />
@@ -61,14 +60,14 @@ function SidebarSubmenu({ submenu, name, icon },buttonClass) {
                             <li key={k}>
                                 <Link
                                     to={m.path}
-                                    className={`${buttonClass} ${
+                                    className={`${sidebarButtonClass} ${
                                         isActive
                                             ? "bg-blue-500 text-white font-bold border-blue-500"
                                             : "bg-white text-gray-800 border-gray-300 hover:bg-blue-100 hover:border-blue-500 hover:text-blue-600"
                                     }`}
                                 >
                                     <span>{m.icon}</span>
-                                    <span className="text-md font-medium">{m.name}</span>
+                                    <span className="text-md font-medium">{t(m.name)}</span>
                                 </Link>
                             </li>
                         );

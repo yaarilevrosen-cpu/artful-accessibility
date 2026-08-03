@@ -6,6 +6,7 @@ import { showNotification } from "../../common/headerSlice";
 import imageCompression from "browser-image-compression";
 import { useAddPaintingsMutation } from  '../../../utils/apiSlice';
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "../../../i18n";
 const INITIAL_PAINTING_OBJ = {
   painter_name: "",
   painting_name: "",
@@ -19,6 +20,7 @@ const INITIAL_PAINTING_OBJ = {
 
 function AddPaintingModalBody({ closeModal }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const [errorMessage, setErrorMessage] = useState("");
   const [paintingObj, setPaintingObj] = useState(INITIAL_PAINTING_OBJ);
   const [loading, setLoading] = useState(false);
@@ -27,18 +29,18 @@ function AddPaintingModalBody({ closeModal }) {
 
   const saveNewPainting = async () => {
     if (paintingObj.painting_name.trim() === "") {
-      return setErrorMessage("Painting Name is required!");
+      return setErrorMessage(t("modal.addPainting.nameRequired"));
     } else if (paintingObj.base_height === "") {
-      return setErrorMessage("Base Height is required!");
+      return setErrorMessage(t("modal.addPainting.baseHeightRequired"));
     } else if (paintingObj.height === "") {
-      return setErrorMessage("Height is required!");
+      return setErrorMessage(t("modal.addPainting.heightRequired"));
     } else if (paintingObj.width === "") {
-      return setErrorMessage("Width is required!");
+      return setErrorMessage(t("modal.addPainting.widthRequired"));
     }
     else if (paintingObj.weight === "") {
-      return setErrorMessage("weight is required!");
+      return setErrorMessage(t("modal.addPainting.weightRequired"));
     }
-    
+
 
     const newPaintingObj = {
       name: paintingObj.painting_name,
@@ -57,15 +59,15 @@ function AddPaintingModalBody({ closeModal }) {
       console.log('success', isSuccess, result)
         if(result.success) {
 
-          dispatch(showNotification({ message: "New Painting Added!", status: 1 }));
+          dispatch(showNotification({ message: t("modal.addPainting.success"), status: 1 }));
           closeModal()
         } else {
-          dispatch(showNotification({ message: "New painting didn't add! try again ", status: 0 }));
+          dispatch(showNotification({ message: t("modal.addPainting.failure"), status: 0 }));
 
         }
 
     } catch (error) {
-      dispatch(showNotification({ message: "Failed to save painting. Please try again. \n  Check the Help Page for more explanation.", status: 0 }));
+      dispatch(showNotification({ message: t("modal.editPainting.failure"), status: 0 }));
     } finally {
       setLoading(false);
     }
@@ -93,7 +95,7 @@ function AddPaintingModalBody({ closeModal }) {
         const compressedFile = await imageCompression(file, options);
 
         if (compressedFile.size > 50* 1024) {
-          alert("The image is still larger than 50KB after compression. Please use a smaller file.");
+          alert(t("modal.addPainting.imageTooLarge"));
           return;
         }
 
@@ -105,7 +107,7 @@ function AddPaintingModalBody({ closeModal }) {
         reader.readAsDataURL(compressedFile);
       } catch (error) {
         console.error("Error compressing the image:", error);
-        alert("Failed to compress the image. Please try again.");
+        alert(t("modal.addPainting.compressFailed"));
       }
     }
   };
@@ -113,7 +115,7 @@ function AddPaintingModalBody({ closeModal }) {
   return (
       <>
         <div style={{ marginBottom: '10px', fontSize: '14px', color: 'gray' }}>
-          <span style={{ color: 'red' }}> You need to fill the fields with * </span>
+          <span style={{ color: 'red' }}> {t('modal.addPainting.requiredHint')} </span>
         </div>
 
         <div
@@ -130,7 +132,7 @@ function AddPaintingModalBody({ closeModal }) {
               updateType="painting_name"
               labelTitle={
                 <span>
-          <span style={{ color: 'red' }}>*</span>Painting Name
+          <span style={{ color: 'red' }}>*</span>{t('modal.field.paintingName')}
         </span>
               }
               updateFormValue={updateFormValue}
@@ -141,7 +143,7 @@ function AddPaintingModalBody({ closeModal }) {
               updateType="painter_name"
               labelTitle={
                 <span>
-          <span style={{ color: 'red' }}>*</span>Painter Name
+          <span style={{ color: 'red' }}>*</span>{t('modal.field.painterName')}
         </span>
               }
               updateFormValue={updateFormValue}
@@ -152,7 +154,7 @@ function AddPaintingModalBody({ closeModal }) {
               updateType="base_height"
               labelTitle={
                 <span>
-          <span style={{ color: 'red' }}>*</span>Base Height (cm)
+          <span style={{ color: 'red' }}>*</span>{t('modal.field.baseHeight')}
         </span>
               }
               updateFormValue={updateFormValue}
@@ -163,7 +165,7 @@ function AddPaintingModalBody({ closeModal }) {
               updateType="height"
               labelTitle={
                 <span>
-          <span style={{ color: 'red' }}>*</span>Height (cm)
+          <span style={{ color: 'red' }}>*</span>{t('modal.field.height')}
         </span>
               }
               updateFormValue={updateFormValue}
@@ -174,7 +176,7 @@ function AddPaintingModalBody({ closeModal }) {
               updateType="width"
               labelTitle={
                 <span>
-          <span style={{ color: 'red' }}>*</span>Width (cm)
+          <span style={{ color: 'red' }}>*</span>{t('modal.field.width')}
         </span>
               }
               updateFormValue={updateFormValue}
@@ -185,7 +187,7 @@ function AddPaintingModalBody({ closeModal }) {
               updateType="weight"
               labelTitle={
                 <span>
-          <span style={{ color: 'red' }}>*</span>Weight (kg)
+          <span style={{ color: 'red' }}>*</span>{t('modal.field.weight')}
         </span>
               }
               updateFormValue={updateFormValue}
@@ -194,21 +196,21 @@ function AddPaintingModalBody({ closeModal }) {
               type="text"
               defaultValue={paintingObj.microcontroller}
               updateType="microcontroller"
-              labelTitle={<span>Microcontroller</span>}
+              labelTitle={<span>{t('modal.field.microcontroller')}</span>}
               updateFormValue={updateFormValue}
           />
         </div>
 
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700">
-            Upload Photo
+            {t('modal.addPainting.uploadPhoto')}
           </label>
-          <div className="mt-2 flex items-center space-x-4">
+          <div className="mt-2 flex items-center gap-4">
             <label
                 htmlFor="file-upload"
                 className="cursor-pointer border border-blue-500 text-blue-500 font-medium py-2 px-4 rounded-md hover:bg-blue-500 hover:text-black transition duration-200"
             >
-              Choose File
+              {t('modal.addPainting.chooseFile')}
             </label>
             <input
                 id="file-upload"
@@ -222,35 +224,35 @@ function AddPaintingModalBody({ closeModal }) {
               <div className="mt-4">
                 <img
                     src={previewImage}
-                    alt="Preview"
+                    alt={t('modal.addPainting.previewAlt')}
                     className="h-32 w-auto rounded shadow"
                 />
               </div>
           )}
           {isLoading ? (
               <div className="mt-16 text-center">
-                <div className="flex items-center justify-center space-x-2">
+                <div className="flex items-center justify-center gap-2">
                   <ArrowPathIcon className="h-5 w-5 text-blue-500 animate-spin" />
-                  <p className="text-gray-500">Saving your painting, please wait...</p>
+                  <p className="text-gray-500">{t('modal.editPainting.saving')}</p>
                 </div>
               </div>
           ) : (
               <ErrorText styleClass="mt-16">{errorMessage}</ErrorText>
           )}
-          <div className="mt-6 flex justify-end space-x-4">
+          <div className="mt-6 flex justify-end gap-4">
             <button
                 className="border border-gray-300 font-medium text-gray-700 rounded-md py-2 px-4 hover:bg-gray-100 transition duration-200"
                 onClick={() => closeModal()}
                 disabled={loading}
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
                 className="bg-blue-500 text-black font-medium py-2 px-6 rounded-md hover:bg-blue-700 transition duration-200"
                 onClick={() => saveNewPainting()}
                 disabled={loading}
             >
-              {loading ? 'Saving...' : 'Save'}
+              {loading ? t('modal.saving') : t('common.save')}
             </button>
           </div>
         </div>

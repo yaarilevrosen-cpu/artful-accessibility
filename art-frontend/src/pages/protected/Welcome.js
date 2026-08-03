@@ -3,13 +3,15 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../features/common/headerSlice';
 import TitleCard from "../../components/Cards/TitleCard";
 import logo from '../protected/Photos/logo.png';
+import { useTranslation } from "../../i18n";
 
 function ManagerWelcomePage() {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   useEffect(() => {
-    dispatch(setPageTitle({ title: 'Welcome' }));
-  }, [dispatch]);
+    dispatch(setPageTitle({ title: t('sidebar.welcome') }));
+  }, [dispatch, t]);
 
   return (
     <TitleCard>
@@ -21,112 +23,103 @@ function ManagerWelcomePage() {
       >
         <img
           src={logo}
-          alt="Hecht Museum Logo"
+          alt={t('sidebar.logoAlt')}
           className="w-full h-full object-contain rounded-full"
         />
       </div>
     </div>
-  
+
     {/* Title Section */}
     <div className="text-center mb-10 space-y-6">
       <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-        Welcome Admin
+        {t('welcomeAdmin.title')}
       </h1>
       <h2 className="text-2xl md:text-3xl font-serif font-medium text-gray-700 dark:text-gray-300">
-        To the Hecht Museum Management System
+        {t('login.systemName')}
       </h2>
       <div className="flex justify-center mt-4">
         <div className="w-32 h-1 bg-yellow-500 rounded-full"></div>
       </div>
     </div>
-  
+
     {/* About Section */}
     <section className="mb-10">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-        About the System
+        {t('welcomeAdmin.aboutTitle')}
       </h2>
       <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
-          The Hecht Museum Management System is designed to help staff
-          efficiently manage paintings integrated into the automated height
-          adjustment system. It also provides a detailed analysis of system
-          performance and visitor interaction data, making museum operations
-          smoother and more insightful.
+          {t('welcomeAdmin.aboutBody')}
       </p>
     </section>
-  
+
     {/* Admin Features Section */}
 <section className="mb-10">
   <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-    Your Admin Tools
+    {t('welcomeAdmin.toolsTitle')}
   </h2>
   <ul className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed space-y-4 list-disc list-inside">
     <li>
-      <strong>Add New Paintings:</strong> Easily integrate new artworks into the automated adjustment system.
+      <strong>{t('welcomeAdmin.tool.add.label')}</strong> {t('welcomeAdmin.tool.add.body')}
     </li>
     <li>
-      <strong>Edit Artwork Details:</strong> Update information such as dimensions and system status (Active/InActive).
+      <strong>{t('welcomeAdmin.tool.edit.label')}</strong> {t('welcomeAdmin.tool.edit.body')}
     </li>
     <li>
-      <strong>Delete Paintings:</strong> Remove artworks no longer in use.
+      <strong>{t('welcomeAdmin.tool.delete.label')}</strong> {t('welcomeAdmin.tool.delete.body')}
     </li>
     <li>
-      <strong>View Analytics:</strong> Real-time data on painting views, visitor engagement, and trends. Includes:
+      <strong>{t('welcomeAdmin.tool.analytics.label')}</strong> {t('welcomeAdmin.tool.analytics.body')}
       <ul className="list-disc pl-6 mt-2">
-        <li>Live statistics on current artworks.</li>
-        <li>Historical data for deleted artworks.</li>
+        <li>{t('welcomeAdmin.tool.analytics.live')}</li>
+        <li>{t('welcomeAdmin.tool.analytics.history')}</li>
       </ul>
     </li>
     <li>
-    
-   
-  <strong>System Tracking:</strong> View the <strong>System Status Panel</strong> under each painting in real time to monitor:
+  <strong>{t('welcomeAdmin.tool.tracking.label')}</strong> {t('welcomeAdmin.tool.tracking.body')}
   <ul className="list-disc list-inside pl-6">
-    <li><strong>System Status:</strong> Shows if the system is working properly.</li>
-    <li><strong>Sensor Activity:</strong> Detects if a person is near the painting.</li>
-    <li><strong>Wheelchair Detection:</strong> Detects people in wheelchairs for height adjustments.</li>
-    <li><strong>Height Adjustment:</strong> Shows if the painting's height is being adjusted.</li>
+    <li><strong>{t('welcomeAdmin.tool.tracking.system.label')}</strong> {t('welcomeAdmin.tool.tracking.system.body')}</li>
+    <li><strong>{t('welcomeAdmin.tool.tracking.sensor.label')}</strong> {t('welcomeAdmin.tool.tracking.sensor.body')}</li>
+    <li><strong>{t('welcomeAdmin.tool.tracking.wheelchair.label')}</strong> {t('welcomeAdmin.tool.tracking.wheelchair.body')}</li>
+    <li><strong>{t('welcomeAdmin.tool.tracking.height.label')}</strong> {t('welcomeAdmin.tool.tracking.height.body')}</li>
   </ul>
 </li>
 
-
-    
     <li>
-      <strong>Export Reports:</strong> Download detailed CSV reports for offline analysis.
+      <strong>{t('welcomeAdmin.tool.export.label')}</strong> {t('welcomeAdmin.tool.export.body')}
     </li>
     <li>
-      <strong>Custom Date Filters:</strong> Analyze data within specific periods to uncover meaningful insights.
+      <strong>{t('welcomeAdmin.tool.dateFilter.label')}</strong> {t('welcomeAdmin.tool.dateFilter.body')}
     </li>
     <li>
-      <strong>Enlarge Artwork Photos:</strong> Open a detailed view of any painting by clicking on its image.
+      <strong>{t('welcomeAdmin.tool.enlarge.label')}</strong> {t('welcomeAdmin.tool.enlarge.body')}
     </li>
   </ul>
 </section>
 
-  
+
     {/* Help Section */}
     <section className="mb-10">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-        Need Help?
+        {t('welcomeAdmin.helpTitle')}
       </h2>
       <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed">
-        Access the Help section for a step-by-step guide on system usage,
-        including:
+        {t('welcomeAdmin.helpBody')}
       </p>
       <ul className="list-disc list-inside pl-4 mt-4 text-gray-700 dark:text-gray-300">
-        <li>Adding, Editing, or Deleting paintings.</li>
-        <li>How to access and interpret analysis reports.</li>
-        <li>System Tracking </li>
+        <li>{t('welcomeAdmin.helpItem.manage')}</li>
+        <li>{t('welcomeAdmin.helpItem.reports')}</li>
+        <li>{t('welcomeAdmin.helpItem.tracking')}</li>
       </ul>
     </section>
-  
+
     {/* Call to Action */}
     <div className="text-center">
       <p className="text-lg text-gray-700 dark:text-gray-300 italic font-semibold mb-4">
-      "Manage and analyze effortlessly. Click on a section to get started!"
+      {t('welcomeAdmin.callToAction')}
       </p>
     </div>
   </TitleCard>
-  
+
   );
 }
 

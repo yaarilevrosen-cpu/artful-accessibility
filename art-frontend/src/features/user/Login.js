@@ -5,8 +5,10 @@ import LandingIntro from "./LandingIntro";
 import ErrorText from "../../components/Typography/ErrorText";
 import InputText from "../../components/Input/InputText";
 import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "../../i18n";
 
 function Login() {
+  const { t, language, toggleLanguage } = useTranslation();
   const INITIAL_LOGIN_OBJ = {
     password: "",
     username: "",
@@ -36,10 +38,10 @@ function Login() {
     setErrorMessage("");
 
     if (loginObj.username.trim() === "") {
-      return setErrorMessage("Username is required!");
+      return setErrorMessage(t("login.usernameRequired"));
     }
     if (loginObj.password.trim() === "") {
-      return setErrorMessage("Password is required!");
+      return setErrorMessage(t("login.passwordRequired"));
     }
 
     setLoading(true);
@@ -73,7 +75,7 @@ function Login() {
     } catch (error) {
       console.error("Error response from backend:", error.response?.data || error.message);
       setErrorMessage(
-        error.response?.data?.message || "Something went wrong. Please try again."
+        error.response?.data?.message || t("login.genericError")
       );
     } finally {
       setLoading(false);
@@ -87,13 +89,24 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-base-200 dark:bg-gray-900 text-gray-800 dark:text-gray-100 relative flex items-center">
-      {/* Theme Toggle */}
-      <div className="absolute top-4 right-4">
+      {/* Theme + Language Toggle */}
+      <div className="absolute top-4 end-4 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={toggleLanguage}
+          aria-label={t("header.toggleLanguageAria")}
+          className="btn btn-ghost btn-sm gap-1"
+        >
+          <span className="text-sm font-semibold">
+            {language === "en" ? t("language.he") : t("language.en")}
+          </span>
+        </button>
         <label className="swap swap-rotate">
           <input
             type="checkbox"
             onChange={toggleTheme}
             checked={currentTheme === "dark"}
+            aria-label={t("header.toggleThemeAria")}
           />
           <SunIcon
             className={
@@ -116,7 +129,7 @@ function Login() {
             <LandingIntro />
           </div>
           <div className="py-24 px-10">
-            <h2 className="text-2xl font-semibold mb-2 text-center">Login</h2>
+            <h2 className="text-2xl font-semibold mb-2 text-center">{t("login.title")}</h2>
             <form onSubmit={submitForm}>
               <div className="mb-4">
                 <InputText
@@ -124,7 +137,7 @@ function Login() {
                   defaultValue={loginObj.username}
                   updateType="username"
                   containerStyle="mt-4"
-                  labelTitle="Username"
+                  labelTitle={t("login.usernameLabel")}
                   updateFormValue={updateFormValue}
                 />
 
@@ -133,7 +146,7 @@ function Login() {
                   type="password"
                   updateType="password"
                   containerStyle="mt-4"
-                  labelTitle="Password"
+                  labelTitle={t("login.passwordLabel")}
                   updateFormValue={updateFormValue}
                 />
               </div>
@@ -147,7 +160,7 @@ function Login() {
                 }
                 disabled={loading}
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? t("login.loggingIn") : t("login.submit")}
               </button>
             </form>
           </div>

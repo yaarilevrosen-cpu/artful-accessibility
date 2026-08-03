@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../features/common/headerSlice';
+import { useTranslation } from '../../i18n';
 import PlusIcon from '@heroicons/react/24/outline/PlusIcon';
 import Success from '../protected/Photos/SuccessAdd.png';
 import Failed from '../protected/Photos/failed.png';
@@ -17,88 +18,89 @@ import status from '../protected/Photos/Status.png';
 import menuButton from '../protected/Photos/button.png';
 function InternalPage() {
     const dispatch = useDispatch();
+    const { t } = useTranslation();
 
     useEffect(() => {
-        dispatch(setPageTitle({ title: "Help" }));
-    }, []);
+        dispatch(setPageTitle({ title: t('helpWorker.pageTitle') }));
+    }, [dispatch, t]);
 
     return (
         <div className="p-6">
             {/* Page Title */}
-            <h1 className="text-3xl font-bold mb-6 text-center">How to Use the System</h1>
+            <h1 className="text-3xl font-bold mb-6 text-center">{t('helpWorker.pageTitle')}</h1>
 
             {/* Help Section */}
             <div className="space-y-8">
  {/* Section 1: Add New Painting */}
 <div className="border p-6 rounded-lg shadow-md">
     <details className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-        <summary className="text-lg font-semibold cursor-pointer">Add New Painting</summary>
-        <p className="mt-4">To add a new painting, follow these steps:</p>
+        <summary className="text-lg font-semibold cursor-pointer">{t('helpWorker.section1.summary')}</summary>
+        <p className="mt-4">{t('helpWorker.section1.intro')}</p>
         <ul className="list-decimal list-inside mb-4">
-            <li>Go to the <strong>Manage Paintings</strong> page on the left sidebars.</li>
+            <li>{t('helpWorker.section1.step1.pre')}<strong>{t('helpWorker.common.managePaintings')}</strong>{t('helpWorker.section1.step1.post')}</li>
             <li className="flex items-center space-x-4">
-                <span>Click the <strong>"Add New"</strong> button at the top-right corner.</span>
+                <span>{t('helpWorker.section1.step2.pre')}<strong>"{t('helpWorker.common.addNew')}"</strong>{t('helpWorker.section1.step2.post')}</span>
                 <button
                     className="bg-blue-500 text-black font-medium px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 transition duration-200 ease-in-out flex items-center space-x-2"
                 >
-                    <span className="text-sm">Add New</span>
+                    <span className="text-sm">{t('helpWorker.common.addNew')}</span>
                     <PlusIcon className="w-4 h-4 text-black" />
                 </button>
             </li>
-            <li>Fill in the following fields:</li>
+            <li>{t('helpWorker.section1.step3')}</li>
             <ul className="list-disc list-inside pl-6 mb-4">
                 <li>
-                    <strong>Painting Name*</strong>: Enter a unique name for the painting. <span className="text-red-500">(Needed)</span>
+                    <strong>{t('helpWorker.field.name.label')}</strong>: {t('helpWorker.field.name.body')} <span className="text-red-500">{t('helpWorker.common.needed')}</span>
                 </li>
                 <li>
-                    <strong>Painter Name*</strong>: Provide the name of the artist who created the painting. <span className="text-red-500">(Needed)</span>
+                    <strong>{t('helpWorker.field.painter.label')}</strong>: {t('helpWorker.field.painter.body')} <span className="text-red-500">{t('helpWorker.common.needed')}</span>
                 </li>
                 <li>
-                    <strong>Base Height (cm)*</strong>: Specify the default base height for the painting. <span className="text-red-500">(Needed)</span>
+                    <strong>{t('helpWorker.field.baseHeight.label')}</strong>: {t('helpWorker.field.baseHeight.body')} <span className="text-red-500">{t('helpWorker.common.needed')}</span>
                 </li>
                 <li>
-                    <strong>Height (cm), Width (cm), Weight (kg) *</strong>: Enter the physical dimensions and weight of the painting. <span className="text-red-500">(Needed)</span>
+                    <strong>{t('helpWorker.field.dimensions.label')}</strong>: {t('helpWorker.field.dimensions.body')} <span className="text-red-500">{t('helpWorker.common.needed')}</span>
                 </li>
                 <li>
-                    <strong>Microcontroller</strong>: Enter the microcontroller Model to link the painting to the automated height adjustment system. <span className="text-gray-500">(Optional)</span>
+                    <strong>{t('helpWorker.field.microcontroller.label')}</strong>: {t('helpWorker.field.microcontroller.body')} <span className="text-gray-500">{t('helpWorker.common.optional')}</span>
                 </li>
                 <li>
-                    <strong>Upload Photo</strong>: Upload an image of the painting. <span className="text-gray-500">(Optional)</span>
+                    <strong>{t('helpWorker.field.uploadPhoto.label')}</strong>: {t('helpWorker.field.uploadPhoto.body')} <span className="text-gray-500">{t('helpWorker.common.optional')}</span>
                 </li>
             </ul>
-            <li> Click <strong>Save</strong> to add the painting to the system, or click <strong>Cancel</strong> to discard the entry and exit without saving.</li>
+            <li> {t('helpWorker.section1.step4.pre')}<strong>{t('helpWorker.common.save')}</strong>{t('helpWorker.section1.step4.mid')}<strong>{t('helpWorker.common.cancel')}</strong>{t('helpWorker.section1.step4.post')}</li>
             <li>
-                Upon successful addition, a <strong>success message</strong> will confirm the painting has been added.
+                {t('helpWorker.section1.step5.pre')}<strong>{t('helpWorker.common.successMessage')}</strong>{t('helpWorker.section1.step5.post')}
             </li>
             <img
-                src={Success} 
-                alt="Success Message"
+                src={Success}
+                alt={t('helpWorker.common.successAlt')}
                 className="w-40 h-16 object-contain rounded-lg shadow-md ml-0"
             />
         </ul>
 
         {/* Error Explanations Section */}
-        <h3 className="text-xl font-semibold mt-6">Error Explanations</h3>
+        <h3 className="text-xl font-semibold mt-6">{t('helpWorker.common.errorExplanationsTitle')}</h3>
         <p className="mt-4">
-            If the painting is not added successfully, here are some potential error messages and their resolutions:
+            {t('helpWorker.section1.errorIntro')}
         </p>
         <img
-            src={Failed} 
-            alt="Failed Message"
+            src={Failed}
+            alt={t('helpWorker.common.failedAlt')}
            className="w-40 h-16 object-contain rounded-lg shadow-md ml-0 mt-4"
         />
         <ul className="list-disc list-inside pl-4 mt-4">
             <li>
-                <strong>Disconnected from Backend:</strong> Ensure that your network connection is active and try again.
+                <strong>{t('helpWorker.section1.error.backend.label')}</strong> {t('helpWorker.section1.error.backend.body')}
             </li>
             <li>
-                <strong>Disconnected from Database:</strong> Verify that the database server is running and accessible. Check for database connection settings or restart the database service if necessary.
+                <strong>{t('helpWorker.section1.error.database.label')}</strong> {t('helpWorker.section1.error.database.body')}
             </li>
             <li>
-                <strong>Installation Failed - Timeout:</strong> Check the backend server status and verify that it is functioning correctly.
+                <strong>{t('helpWorker.section1.error.timeout.label')}</strong> {t('helpWorker.section1.error.timeout.body')}
             </li>
             <li>
-    <strong>Microcontroller Error:</strong> Verify that the microcontroller Model is correct, ensure it is powered on, available for linking, and not already assigned to another painting.
+    <strong>{t('helpWorker.section1.error.microcontroller.label')}</strong> {t('helpWorker.section1.error.microcontroller.body')}
 </li>
         </ul>
     </details>
@@ -109,50 +111,50 @@ function InternalPage() {
                 {/* Section 2: Edit Painting */}
 <div className="border p-6 rounded-lg shadow-md">
     <details className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-        <summary className="text-lg font-semibold cursor-pointer">Edit a Painting</summary>
-        <p className="mb-4 mt-4">To edit an existing painting, follow these steps:</p>
+        <summary className="text-lg font-semibold cursor-pointer">{t('helpWorker.section2.summary')}</summary>
+        <p className="mb-4 mt-4">{t('helpWorker.section2.intro')}</p>
         <ul className="list-decimal list-inside mb-4">
-            <li>Go to the <strong>Manage Paintings</strong> page.</li>
+            <li>{t('helpWorker.section2.step1.pre')}<strong>{t('helpWorker.common.managePaintings')}</strong>{t('helpWorker.section2.step1.post')}</li>
             <li>
-                Locate the painting you want to edit and click the <strong>Edit</strong> button located below the painting's photo:
+                {t('helpWorker.section2.step2.pre')}<strong>{t('helpWorker.common.edit')}</strong>{t('helpWorker.section2.step2.post')}
                 <button
                     className="flex items-center space-x-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline mt-2"
                     onClick={() => console.log("Edit button clicked")}
                 >
                     <PencilIcon className="w-5 h-5" />
-                    <span>Edit</span>
+                    <span>{t('helpWorker.common.edit')}</span>
                 </button>
             </li>
-            <li> Modify the fields in the form, including information about the painting such as dimensions, name, painter name, or system status (Active/Inactive).</li>
+            <li> {t('helpWorker.section2.step3')}</li>
             <ul className="list-disc list-inside pl-6 mb-4">
             </ul>
-            <li> Click <strong>Save</strong> to apply the changes, or click <strong>Cancel</strong> to discard the edits and exit the editing mode.</li>
+            <li> {t('helpWorker.section2.step4.pre')}<strong>{t('helpWorker.common.save')}</strong>{t('helpWorker.section2.step4.mid')}<strong>{t('helpWorker.common.cancel')}</strong>{t('helpWorker.section2.step4.post')}</li>
             <li>
-                Upon successful editing, a <strong>success message</strong> will confirm that the updates have been applied.
+                {t('helpWorker.section2.step5.pre')}<strong>{t('helpWorker.common.successMessage')}</strong>{t('helpWorker.section2.step5.post')}
             </li>
             <img
-                src={Update} 
-                alt="Success Message"
+                src={Update}
+                alt={t('helpWorker.common.successAlt')}
                 className="w-40 h-16 object-contain rounded-lg shadow-md ml-0"
             />
         </ul>
 
         {/* Error Explanations */}
-        <h3 className="text-xl font-semibold mt-6">Error Explanations</h3>
+        <h3 className="text-xl font-semibold mt-6">{t('helpWorker.common.errorExplanationsTitle')}</h3>
         <p className="mt-4">
-            If the painting is not edited successfully, here are potential error messages and their resolutions:
+            {t('helpWorker.section2.errorIntro')}
         </p>
         <img
-            src={Failed} 
-            alt="Failed Message"
+            src={Failed}
+            alt={t('helpWorker.common.failedAlt')}
             className="w-40 h-16 object-contain rounded-lg shadow-md ml-0 mt-4"
         />
         <ul className="list-disc list-inside pl-4 mt-4">
             <li>
-                <strong>Disconnected from Database:</strong> Verify that the database server is running and accessible. Check for database connection settings or restart the database service if necessary.
+                <strong>{t('helpWorker.section2.error.database.label')}</strong> {t('helpWorker.section2.error.database.body')}
             </li>
             <li>
-                <strong>Disconnected from Backend:</strong> Ensure that your network connection is active and try again. Check the backend server status for connectivity issues.
+                <strong>{t('helpWorker.section2.error.backend.label')}</strong> {t('helpWorker.section2.error.backend.body')}
             </li>
         </ul>
     </details>
@@ -162,67 +164,67 @@ function InternalPage() {
                 {/* Section 3: Delete Painting */}
 <div className="border p-6 rounded-lg shadow-md">
     <details className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-        <summary className="text-lg font-semibold cursor-pointer">Delete a Painting</summary>
-        <p className="mb-4 mt-4">To delete an existing painting, follow these steps:</p>
+        <summary className="text-lg font-semibold cursor-pointer">{t('helpWorker.section3.summary')}</summary>
+        <p className="mb-4 mt-4">{t('helpWorker.section3.intro')}</p>
         <ul className="list-decimal list-inside mb-4">
-            <li>Go to the <strong>Manage Paintings</strong> page.</li>
+            <li>{t('helpWorker.section3.step1.pre')}<strong>{t('helpWorker.common.managePaintings')}</strong>{t('helpWorker.section3.step1.post')}</li>
             <li>
-                Locate the painting you want to delete and click the <strong>Delete</strong> button located below the painting's photo:
+                {t('helpWorker.section3.step2.pre')}<strong>{t('helpWorker.common.delete')}</strong>{t('helpWorker.section3.step2.post')}
                 <button
                     className="flex items-center space-x-2 text-red-500 border border-red-500 rounded-md px-3 py-1 hover:bg-red-100 transition duration-200 underline mt-2"
                 >
                     <TrashIcon className="w-5 h-5" />
-                    <span>Delete</span>
+                    <span>{t('helpWorker.common.delete')}</span>
                 </button>
             </li>
             <li>
-                A confirmation modal will appear You can:
+                {t('helpWorker.section3.step3')}
                 <img
                     src={Confirm}  // Replace with the correct path to your success message image
-                    alt="confirm  Message"
+                    alt={t('helpWorker.section3.confirmAlt')}
                     className="w-80 h-32 object-contain rounded-lg shadow-lg"
                 />
                 <ul className="list-disc list-inside pl-6 mb-4">
                     <li>
-                        Click <strong>Confirm</strong> to proceed with the deletion.
+                        {t('helpWorker.section3.step3a.pre')}<strong>{t('helpWorker.common.confirm')}</strong>{t('helpWorker.section3.step3a.post')}
                     </li>
                     <li>
-                        Click <strong>Cancel</strong> to cancel the deletion and exit the modal.
+                        {t('helpWorker.section3.step3b.pre')}<strong>{t('helpWorker.common.cancel')}</strong>{t('helpWorker.section3.step3b.post')}
                     </li>
                 </ul>
             </li>
             <li>
-                Upon successful deletion, a <strong>success message</strong> will confirm that the painting has been removed:
+                {t('helpWorker.section3.step4.pre')}<strong>{t('helpWorker.common.successMessage')}</strong>{t('helpWorker.section3.step4.post')}
                 <img
                     src={Delete}  // Replace with the correct path to your success message image
-                    alt="Success Message"
+                    alt={t('helpWorker.common.successAlt')}
                     className="w-40 h-16 object-contain rounded-lg shadow-md ml-0 mt-4"
                 />
             </li>
         </ul>
 
         {/* Error Explanations */}
-        <h3 className="text-xl font-semibold mt-6">Error Explanations</h3>
+        <h3 className="text-xl font-semibold mt-6">{t('helpWorker.common.errorExplanationsTitle')}</h3>
         <p className="mt-4">
-            If the painting cannot be deleted, here are some potential error messages and their resolutions:
+            {t('helpWorker.section3.errorIntro')}
         </p>
         <img
-            src={FailedDelete} 
-            alt="Failed Message"
+            src={FailedDelete}
+            alt={t('helpWorker.common.failedAlt')}
            className="w-40 h-16 object-contain rounded-lg shadow-md ml-0 mt-4"
         />
         <ul className="list-disc list-inside pl-4 mt-4">
             <li>
-                <strong>Disconnected from Database:</strong> Verify that the database server is running and accessible. Check the database connection settings or restart the database service if necessary.
+                <strong>{t('helpWorker.section3.error.database.label')}</strong> {t('helpWorker.section3.error.database.body')}
             </li>
             <li>
-                <strong>Disconnected from Backend:</strong> Ensure that your network connection is active and try again. Check the backend server status for connectivity issues.
+                <strong>{t('helpWorker.section3.error.backend.label')}</strong> {t('helpWorker.section3.error.backend.body')}
             </li>
             <li>
-                <strong>Microcontroller Not Found:</strong> Verify that the microcontroller associated with the painting's ID is powered on and functioning correctly.
+                <strong>{t('helpWorker.section3.error.microcontrollerNotFound.label')}</strong> {t('helpWorker.section3.error.microcontrollerNotFound.body')}
             </li>
             <li>
-                <strong>Cannot Delete ID from Microcontroller:</strong> The microcontroller might not allow the deletion of the painting's ID. Restart the microcontroller and try again.
+                <strong>{t('helpWorker.section3.error.cannotDeleteId.label')}</strong> {t('helpWorker.section3.error.cannotDeleteId.body')}
             </li>
         </ul>
     </details>
@@ -232,73 +234,73 @@ function InternalPage() {
 {/* Section 4: View Painting Information */}
 <div className="border p-6 rounded-lg shadow-md">
     <details className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-        <summary className="text-lg font-semibold cursor-pointer">View Painting Information</summary>
-        <p className="mb-4 mt-4">To view detailed information about a painting, follow these steps:</p>
+        <summary className="text-lg font-semibold cursor-pointer">{t('helpWorker.section4.summary')}</summary>
+        <p className="mb-4 mt-4">{t('helpWorker.section4.intro')}</p>
         <ul className="list-decimal list-inside mb-4">
-            <li>Go to the <strong>Manage Paintings</strong> page.</li>
+            <li>{t('helpWorker.section4.step1.pre')}<strong>{t('helpWorker.common.managePaintings')}</strong>{t('helpWorker.section4.step1.post')}</li>
             <li>
-                Locate the painting you want to view and click the <strong>Info</strong> button located below the painting's photo:
+                {t('helpWorker.section4.step2.pre')}<strong>{t('helpWorker.common.info')}</strong>{t('helpWorker.section4.step2.post')}
                 <button
                     className="flex items-center space-x-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline "
-                  
+
                 >
-                    <span>Info</span>
+                    <span>{t('helpWorker.common.info')}</span>
                 </button>
             </li>
             <li>
-                A modal will appear, displaying detailed information about the painting, including:
+                {t('helpWorker.section4.step3')}
                 <ul className="list-disc list-inside pl-6 mb-4">
-                    <li><strong>ID:</strong> Unique identifier for the painting.</li>
-                    <li><strong>Painter:</strong> Name of the artist.</li>
-                    <li><strong>Base Height:</strong> The initial height of the painting.</li>
-                    <li><strong>Height:</strong> The height of the painting in cm.</li>
-                    <li><strong>Width:</strong> The width of the painting in cm.</li>
-                    <li><strong>Weight:</strong> The weight of the painting in kg.</li>
-                    <li><strong>Microcontroller:</strong> The microcontroller Type.</li>
+                    <li><strong>{t('helpWorker.section4.field.id.label')}</strong> {t('helpWorker.section4.field.id.body')}</li>
+                    <li><strong>{t('helpWorker.section4.field.painter.label')}</strong> {t('helpWorker.section4.field.painter.body')}</li>
+                    <li><strong>{t('helpWorker.section4.field.baseHeight.label')}</strong> {t('helpWorker.section4.field.baseHeight.body')}</li>
+                    <li><strong>{t('helpWorker.section4.field.height.label')}</strong> {t('helpWorker.section4.field.height.body')}</li>
+                    <li><strong>{t('helpWorker.section4.field.width.label')}</strong> {t('helpWorker.section4.field.width.body')}</li>
+                    <li><strong>{t('helpWorker.section4.field.weight.label')}</strong> {t('helpWorker.section4.field.weight.body')}</li>
+                    <li><strong>{t('helpWorker.section4.field.microcontroller.label')}</strong> {t('helpWorker.section4.field.microcontroller.body')}</li>
                     <li>
-                    <strong>Height Adjustment:</strong>
-<span className="text-gray-500"> Calculated using the formula:</span>
+                    <strong>{t('helpWorker.section4.heightAdjustment.label')}</strong>
+<span className="text-gray-500"> {t('helpWorker.section4.heightAdjustment.calcIntro')}</span>
 <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded-md mt-2 text-sm">
-    Height Adjustment = (Base Height + (Height / 2)) - Average Eye Level (cm)
+    {t('helpWorker.section4.heightAdjustment.formula')}
 </div>
 <p className="mt-2">
-    This formula adjusts the painting's height to match the average eye level of a person for comfortable and accessible viewing.
+    {t('helpWorker.section4.heightAdjustment.explanation')}
     <ul className="list-disc list-inside mt-2">
-        <li><strong>Base Height:</strong> The distance from the floor to the bottom edge of the painting.</li>
-        <li><strong>Height / 2:</strong> Calculates the middle point of the painting's height.</li>
-        <li><strong>Average Eye Level:</strong> Represents the typical eye level of a person in a wheelchair (e.g., 119.25 cm).</li>
+        <li><strong>{t('helpWorker.section4.heightAdjustment.baseHeight.label')}</strong> {t('helpWorker.section4.heightAdjustment.baseHeight.body')}</li>
+        <li><strong>{t('helpWorker.section4.heightAdjustment.halfHeight.label')}</strong> {t('helpWorker.section4.heightAdjustment.halfHeight.body')}</li>
+        <li><strong>{t('helpWorker.section4.heightAdjustment.avgEyeLevel.label')}</strong> {t('helpWorker.section4.heightAdjustment.avgEyeLevel.body')}</li>
     </ul>
 </p>
 <p className="mt-2">
     <span className="text-red-500">
-        If the adjustment value is "No Adjust," it means the painting's height is already optimal for viewing.
+        {t('helpWorker.section4.heightAdjustment.noAdjustNote')}
     </span>
 </p>
 
                     </li>
                     <li>
-                        <strong>Optimal Viewing Distance:</strong>
-                        <span className="text-gray-500"> Calculated as:</span>
+                        <strong>{t('helpWorker.section4.viewingDistance.label')}</strong>
+                        <span className="text-gray-500"> {t('helpWorker.section4.viewingDistance.calcIntro')}</span>
                         <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded-md mt-2 text-sm">
-                            Optimal Viewing Distance = 1.5 × Diagonal of the Painting
+                            {t('helpWorker.section4.viewingDistance.formula')}
                         </div>
                         <p className="mt-2">
-                            This calculates the optimal distance for viewing the painting based on its dimensions:
+                            {t('helpWorker.section4.viewingDistance.explanation')}
                             <ul className="list-disc list-inside mt-2">
                                 <li>
-                                    <strong>Diagonal:</strong> Calculated using the painting's height and width.
+                                    <strong>{t('helpWorker.section4.viewingDistance.diagonal.label')}</strong> {t('helpWorker.section4.viewingDistance.diagonal.body')}
                                 </li>
                                 <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded-md mt-2 text-sm">
-            Diagonal = √(Height² + Width²)
+            {t('helpWorker.section4.viewingDistance.diagonalFormula')}
         </div>
                                 <li>
-                                    The factor of 1.5 ensures a comfortable viewing experience, widely used in museums and galleries.
+                                    {t('helpWorker.section4.viewingDistance.factorNote')}
                                 </li>
-                               
+
                             </ul>
                         </p>
                     </li>
-                  
+
                 </ul>
             </li>
         </ul>
@@ -310,190 +312,190 @@ function InternalPage() {
 {/* Section 5: System Status Panel */}
 <div className="border p-6 rounded-lg shadow-md">
     <details className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-        <summary className="text-lg font-semibold cursor-pointer">System Status Panel</summary>
+        <summary className="text-lg font-semibold cursor-pointer">{t('helpWorker.section5.summary')}</summary>
         <p className="mt-4">
-            The System Status Panel is displayed under each painting in the <strong>Manage Paintings</strong> page. It provides real-time information about the system's components for that specific painting. Here's what each component indicates:
+            {t('helpWorker.section5.intro.pre')}<strong>{t('helpWorker.common.managePaintings')}</strong>{t('helpWorker.section5.intro.post')}
         </p>
         <ul className="list-disc list-inside pl-4 mt-4">
             <li>
-                <strong>System Status:</strong>
+                <strong>{t('helpWorker.section5.systemStatus.label')}</strong>
                 <p className="mt-2">
-                    Displays the overall status of the system:
+                    {t('helpWorker.section5.systemStatus.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
                         <li className="flex items-center space-x-2">
                             <img
                                 src={RunningIcon}
-                                alt={`RunningIcon`}
+                                alt={t('helpWorker.common.runningIconAlt')}
                                 className="w-6 h-6"
                             />
                             <span className="text-black-500 font-medium">
-                                The system is running and fully operational.
+                                {t('helpWorker.section5.systemStatus.running')}
                             </span>
                         </li>
                         <li className="flex items-center space-x-2">
                             <img
                                 src={StoppedIcon}
-                                alt={`StoppedIcon`}
+                                alt={t('helpWorker.common.stoppedIconAlt')}
                                 className="w-6 h-6"
                             />
                             <span className="text-black-500 font-medium">
-                                The system is not operational. Check for network or backend connectivity issues.
+                                {t('helpWorker.section5.systemStatus.stopped')}
                             </span>
                         </li>
                     </ul>
                 </p>
-               
+
 
 <div className="text-center my-4">
-            
+
         </div>
         <div className="flex items-center space-x-4 mt-2">
     {/* Text and Button Image */}
     <p>
-        Next to the System Status A menu button allows staff to perform additional actions
+        {t('helpWorker.section5.menuIntro')}
     </p>
     <img
         src={menuButton} // Replace with the actual path to your menu button image
-        alt="menu button"
+        alt={t('helpWorker.section5.menuButtonAlt')}
         className="w-10 h-10 object-contain"
     />
 </div>
 
 <p className="mt-2">
-    This  is the menu:
+    {t('helpWorker.section5.menuDescription')}
 </p>
 
 <div className="text-center my-4">
     {/* Status Image */}
     <img
-        src={status} 
-        alt="status"
+        src={status}
+        alt={t('helpWorker.section5.statusImageAlt')}
         className="w-40 h-28 object-contain rounded-lg shadow-md"
     />
 </div>
 
 <ul className="list-disc list-inside pl-6 mt-2">
     <li>
-        <strong>Shutdown MicroController:</strong> Safely powers off the microcontroller to prevent data loss or hardware damage.
+        <strong>{t('helpWorker.section5.menu.shutdown.label')}</strong> {t('helpWorker.section5.menu.shutdown.body')}
     </li>
     <li>
-        <strong>Restart MicroController:</strong> Reboots the microcontroller to refresh all processes and resolve temporary issues.
+        <strong>{t('helpWorker.section5.menu.restart.label')}</strong> {t('helpWorker.section5.menu.restart.body')}
     </li>
     <li>
-        <strong>Re/Start Program:</strong> Restarts the running program without rebooting the hardware, allowing quick recovery and ensuring minimal downtime.
+        <strong>{t('helpWorker.section5.menu.restartProgram.label')}</strong> {t('helpWorker.section5.menu.restartProgram.body')}
     </li>
 </ul>
 
-          
 
-                <strong>Sensor:</strong>
+
+                <strong>{t('helpWorker.section5.sensor.label')}</strong>
                 <p className="mt-2">
-                    Indicates whether the sensor detects a person within the painting's **Optimal Viewing Distance**:
+                    {t('helpWorker.section5.sensor.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
                         <li className="flex items-center space-x-2">
                         <img
             src={RunningIcon}
-            alt={`RunningIcon`}
+            alt={t('helpWorker.common.runningIconAlt')}
             className="w-6 h-6"
         />
                             <span className="text-black-500 font-medium">
-                                A person is detected within the optimal viewing distance.
+                                {t('helpWorker.section5.sensor.detected')}
                             </span>
                         </li>
                         <li className="flex items-center space-x-2">
                         <img
             src={StoppedIcon}
-            alt={`StoppedIcon`}
+            alt={t('helpWorker.common.stoppedIconAlt')}
             className="w-6 h-6"
         />
                             <span className="text-black-500 font-medium">
-                                No person is detected within the optimal viewing distance.
+                                {t('helpWorker.section5.sensor.notDetected')}
                             </span>
                         </li>
                     </ul>
                     <p className="mt-2">
-                        The **Optimal Viewing Distance** is calculated as:
+                        {t('helpWorker.section5.sensor.viewingDistanceIntro')}
                         <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded-md mt-2 text-sm">
-                            Optimal Viewing Distance = 1.5 × Diagonal of the Painting
+                            {t('helpWorker.section4.viewingDistance.formula')}
                         </div>
                         <ul className="list-disc list-inside mt-2">
                             <li>
-                                <strong>Diagonal:</strong> Calculated using the Pythagorean theorem:
+                                <strong>{t('helpWorker.section5.sensor.diagonal.label')}</strong> {t('helpWorker.section5.sensor.diagonal.body')}
                                 <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded-md mt-2 text-sm">
-                                    Diagonal = √(Height² + Width²)
+                                    {t('helpWorker.section4.viewingDistance.diagonalFormula')}
                                 </div>
                             </li>
                             <li>
-                                The sensor ensures that individuals within this distance are detected for interaction.
+                                {t('helpWorker.section5.sensor.interactionNote')}
                             </li>
                         </ul>
                     </p>
                 </p>
             </li>
             <li className="mt-4">
-                <strong>Wheelchair:</strong>
+                <strong>{t('helpWorker.section5.wheelchair.label')}</strong>
 
-                
+
                 <p className="mt-2">
-                    Monitors whether a wheelchair user has been detected:
+                    {t('helpWorker.section5.wheelchair.intro')}
 
                     <li className="flex items-center space-x-2">
                         <img
             src={LoadingIcon}
-            alt={`LoadingIcon`}
+            alt={t('helpWorker.common.loadingIconAlt')}
             className="w-6 h-6"
         />
                             <span className="text-black-500 font-medium">
-                            Detecting a wheelchair user.
+                            {t('helpWorker.section5.wheelchair.detecting')}
                             </span>
                         </li>
                     <ul className="list-disc list-inside pl-6 mt-2">
                         <li className="flex items-center space-x-2">
                         <img
             src={RunningIcon}
-            alt={`RunningIcon`}
+            alt={t('helpWorker.common.runningIconAlt')}
             className="w-6 h-6"
         />
                             <span className="text-black-500 font-medium">
-                                A wheelchair user is detected. The system will adjust the painting height accordingly.
+                                {t('helpWorker.section5.wheelchair.detected')}
                             </span>
                         </li>
                         <li className="flex items-center space-x-2">
                         <img
             src={StoppedIcon}
-            alt={`StoppedIcon`}
+            alt={t('helpWorker.common.stoppedIconAlt')}
             className="w-6 h-6"
         />
                             <span className="text-black-500 font-medium">
-                                No wheelchair user is detected.
+                                {t('helpWorker.section5.wheelchair.notDetected')}
                             </span>
                         </li>
                     </ul>
                 </p>
             </li>
             <li className="mt-4">
-                <strong>Height Adjust:</strong>
+                <strong>{t('helpWorker.section5.heightAdjust.label')}</strong>
                 <p className="mt-2">
-                    Displays the status of the height adjustment process:
+                    {t('helpWorker.section5.heightAdjust.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
                         <li className="flex items-center space-x-2">
                         <img
             src={RunningIcon}
-            alt={`RunningIcon`}
+            alt={t('helpWorker.common.runningIconAlt')}
             className="w-6 h-6"
         />
                             <span className="text-black-500 font-medium">
-                                Height adjustment is in progress.
+                                {t('helpWorker.section5.heightAdjust.inProgress')}
                             </span>
                         </li>
                         <li className="flex items-center space-x-2">
                         <img
             src={StoppedIcon}
-            alt={`StoppedIcon`}
+            alt={t('helpWorker.common.stoppedIconAlt')}
             className="w-6 h-6"
         />
                             <span className="text-black-500 font-medium">
-                                No height adjustments are currently in progress.
+                                {t('helpWorker.section5.heightAdjust.notInProgress')}
                             </span>
                         </li>
                     </ul>
@@ -501,22 +503,22 @@ function InternalPage() {
             </li>
         </ul>
 
-        <h3 className="text-xl font-semibold mt-6">Troubleshooting Tips</h3>
+        <h3 className="text-xl font-semibold mt-6">{t('helpWorker.section5.troubleshootingTitle')}</h3>
         <p className="mt-4">
-            If any component is not functioning correctly, here are some steps to troubleshoot:
+            {t('helpWorker.section5.troubleshootingIntro')}
         </p>
         <ul className="list-disc list-inside pl-4 mt-4">
             <li>
-                <strong>System Status:</strong> Check the backend server and ensure it is running. Verify network connectivity.
+                <strong>{t('helpWorker.section5.troubleshoot.systemStatus.label')}</strong> {t('helpWorker.section5.troubleshoot.systemStatus.body')}
             </li>
             <li>
-                <strong>Sensor:</strong> Ensure the sensor is powered on and properly connected. Check for any obstructions or misalignment.
+                <strong>{t('helpWorker.section5.troubleshoot.sensor.label')}</strong> {t('helpWorker.section5.troubleshoot.sensor.body')}
             </li>
             <li>
-                <strong>Wheelchair:</strong> Verify that the wheelchair detection module is active and calibrated correctly.
+                <strong>{t('helpWorker.section5.troubleshoot.wheelchair.label')}</strong> {t('helpWorker.section5.troubleshoot.wheelchair.body')}
             </li>
             <li>
-                <strong>Height Adjust:</strong> Ensure the motor and microcontroller are functioning. Restart the system if needed.
+                <strong>{t('helpWorker.section5.troubleshoot.heightAdjust.label')}</strong> {t('helpWorker.section5.troubleshoot.heightAdjust.body')}
             </li>
         </ul>
     </details>
