@@ -42,6 +42,13 @@ services:
     volumes:
       - ./art-backend:/app
       - /app/node_modules
+      # Minimal, read-only windows into host state for the system health
+      # strip (CPU/GPU temp, disk free, uptime). No privileged mode, no
+      # extra capabilities, no write access - just the specific files/dirs
+      # that carry this data, each mounted read-only.
+      - /sys/devices/virtual/thermal:/host/sys/devices/virtual/thermal:ro
+      - /proc/uptime:/host/proc/uptime:ro
+      - /:/host/disk:ro
     depends_on:
       - mongodb
       - mosquitto

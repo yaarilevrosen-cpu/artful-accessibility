@@ -246,6 +246,30 @@ const he = {
   "historyPage.pageTitle": "היסטוריה",
   "historyPage.explanation": "הנתונים הסטטיסטיים בעמוד זה מציגים תובנות על ציורים שנמחקו. הדבר מסייע לעקוב אחר המעורבות וההיסטוריה שלהם לפני שהוסרו.",
   "historyPage.noStats": "אין היסטוריה של ציורים שנמחקו.",
+
+  // --- System health strip ---
+  "health.backendUnreachable": "השרת אינו זמין - מצב המערכת אינו ידוע",
+  "health.unknown": "לא ידוע",
+  "health.cpu": "מעבד",
+  "health.gpu": "כרטיס גרפי",
+  "health.disk": "אחסון",
+  "health.diskValue": "{free}GB פנויים מתוך {total}GB",
+  "health.uptime": "זמן פעילות",
+  "health.uptimeDaysHours": "{days} ימים {hours} שעות",
+  "health.uptimeHoursMinutes": "{hours} שעות {minutes} דקות",
+  "health.uptimeMinutes": "{minutes} דקות",
+  "health.inferenceServer": "שרת ההסקה",
+  "health.broker": "מתווך ההודעות",
+  "health.online": "פעיל",
+  "health.offline": "לא פעיל",
+  "health.activePaintings": "ציורים פעילים",
+  "health.severity.normal": "תקין",
+  "health.severity.warm": "חם",
+  "health.severity.hot": "חם מאוד",
+  "health.severity.unknown": "לא ידוע",
+
+  // --- Offline alerting banner ---
+  "offline.cameraBanner": "המצלמה אינה מדווחת עבור: {paintings}",
 };
 
 export default he;

@@ -250,6 +250,20 @@ class PresenceManager {
         this.rescanTimer = null;
     }
 
+    // For the offline-alerting UI (see HealthController): one entry per
+    // painting currently being polled (i.e. Active with a camera assigned),
+    // reporting whether its camera is currently reporting or has tripped
+    // the failsafe threshold. Not present in this list at all means "no
+    // camera assigned" / "not being polled", which the UI treats as N/A
+    // rather than offline.
+    getStatusSummary() {
+        return Array.from(this.pollers.values()).map((poller) => ({
+            sys_id: poller.sys_id,
+            camera_ok: poller.failStreak < FAIL_LIMIT,
+            fail_streak: poller.failStreak,
+        }));
+    }
+
     _statusUrlFor(painting) {
         if (STATUS_URL_OVERRIDE) return STATUS_URL_OVERRIDE;
         return `${INFERENCE_BASE_URL}/status?device=${encodeURIComponent(painting.camera_device)}`;

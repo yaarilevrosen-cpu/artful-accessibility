@@ -43,9 +43,16 @@ const isAdmin = (req, res, next) => {
     res.status(403).json({ message: 'Forbidden' });
 };
 
+// Assigned once presenceManager starts (below, inside server.listen) - a
+// getter closure is handed to HealthRouter instead of the value itself so
+// routes registered now can still see it once startup finishes, since
+// route handlers only run later, at request time.
+let presenceManager = null;
+
 // Use routes - all painting routes will be prefixed with /api/paintings
 app.use('/auth', require('./src/controllers/AuthController'));
 app.use('/paintings', paintingRoutes);
+app.use('/health', require('./src/routes/HealthRouter')(paintingRoutes.mqttService, () => presenceManager));
 // 404 handler for undefined routes
 app.use((req, res) => {
     res.status(404).json({
@@ -83,7 +90,7 @@ server.listen(PORT, async () => {
     // collection on a timer, so paintings added or (re)assigned a camera while
     // the server is running are picked up without a restart.
     if (process.env.PRESENCE_SOURCE === 'camera') {
-        const presenceManager = new PresenceManager(paintingRoutes.mqttService);
+        presenceManager = new PresenceManager(paintingRoutes.mqttService);
         presenceManager.start();
         console.log('PRESENCE_SOURCE=camera: presenceManager started');
     } else {

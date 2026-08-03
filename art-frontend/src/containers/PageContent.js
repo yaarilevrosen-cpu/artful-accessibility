@@ -1,4 +1,6 @@
 import Header from "./Header"
+import SystemHealthStrip from "./SystemHealthStrip"
+import OfflineBanner from "./OfflineBanner"
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import routes from '../routes'
 import { Suspense, lazy } from 'react'
@@ -25,6 +27,8 @@ function PageContent(){
     return(
         <div className="drawer-content flex flex-col ">
             <Header/>
+            <OfflineBanner/>
+            <SystemHealthStrip/>
             <main className="flex-1 overflow-y-auto md:pt-4 pt-4 px-6  bg-base-200" ref={mainContentRef}>
                 <Suspense fallback={<SuspenseContent />}>
                         <Routes>

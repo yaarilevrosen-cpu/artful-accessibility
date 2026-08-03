@@ -250,6 +250,30 @@ const en = {
   "historyPage.pageTitle": "History",
   "historyPage.explanation": "The statistics displayed on this page provide insights into deleted paintings. This helps track their engagement and view history before they were removed.",
   "historyPage.noStats": "No history of deleted paintings available.",
+
+  // --- System health strip ---
+  "health.backendUnreachable": "Backend unreachable - health status unknown",
+  "health.unknown": "Unknown",
+  "health.cpu": "CPU",
+  "health.gpu": "GPU",
+  "health.disk": "Disk",
+  "health.diskValue": "{free}GB / {total}GB free",
+  "health.uptime": "Uptime",
+  "health.uptimeDaysHours": "{days}d {hours}h",
+  "health.uptimeHoursMinutes": "{hours}h {minutes}m",
+  "health.uptimeMinutes": "{minutes}m",
+  "health.inferenceServer": "Inference server",
+  "health.broker": "Broker",
+  "health.online": "Online",
+  "health.offline": "Offline",
+  "health.activePaintings": "Active paintings",
+  "health.severity.normal": "normal",
+  "health.severity.warm": "warm",
+  "health.severity.hot": "hot",
+  "health.severity.unknown": "unknown",
+
+  // --- Offline alerting banner ---
+  "offline.cameraBanner": "Camera not reporting for: {paintings}",
 };
 
 export default en;
