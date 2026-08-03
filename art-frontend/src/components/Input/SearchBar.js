@@ -1,9 +1,10 @@
 
 
 import React, { useEffect } from 'react'
+import { useTranslation } from '../../i18n'
 
 function SearchBar({searchText, styleClass, placeholderText, setSearchText}) {
-
+const { t } = useTranslation();
 
 
 const updateSearchInput = (value) => {
@@ -13,7 +14,7 @@ const updateSearchInput = (value) => {
   return (
     <div className={"inline-block " + styleClass}>
     <div className="input-group  relative flex flex-wrap items-stretch w-full ">
-      <input type="search" value={searchText} placeholder={placeholderText || "Search"} onChange={(e) => updateSearchInput(e.target.value)} className="input input-sm input-bordered  w-full max-w-xs" />
+      <input type="search" value={searchText} placeholder={placeholderText || t('common.search')} onChange={(e) => updateSearchInput(e.target.value)} className="input input-sm input-bordered  w-full max-w-xs" />
   </div>
 </div>
   )

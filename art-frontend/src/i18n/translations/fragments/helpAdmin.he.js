@@ -1,4 +1,4 @@
-export default {
+const helpAdmin_he = {
   "helpAdmin.pageTitle": "איך להשתמש במערכת",
 
   // Common / reused strings
@@ -230,3 +230,5 @@ export default {
   "helpAdmin.section6.error.disconnected.label": "אין חיבור לשרת/מסד הנתונים:",
   "helpAdmin.section6.error.disconnected.body": "ודאו את חיבור הרשת שלכם וודאו ששרת הבק-אנד פעיל."
 };
+
+export default helpAdmin_he;

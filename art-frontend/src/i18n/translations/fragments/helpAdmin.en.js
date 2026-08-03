@@ -1,4 +1,4 @@
-export default {
+const helpAdmin_en = {
   "helpAdmin.pageTitle": "How to Use the System",
 
   // Common / reused strings
@@ -230,3 +230,5 @@ export default {
   "helpAdmin.section6.error.disconnected.label": "Disconnected from Backend/Database:",
   "helpAdmin.section6.error.disconnected.body": "Verify your network connection and ensure the backend server is operational."
 };
+
+export default helpAdmin_en;

@@ -4,6 +4,7 @@ import { setPageTitle } from '../../features/common/headerSlice'
 import axios from 'axios'
 import { useGetPaintingsQuery } from '../../utils/apiSlice'
 import VideoCameraIcon from '@heroicons/react/24/solid/VideoCameraIcon'
+import { useTranslation } from '../../i18n'
 
 // Resolves the backend/inference host from whatever address the page
 // was loaded from, so LAN and Tailscale both work with one build.
@@ -15,6 +16,7 @@ const POLL_INTERVAL_MS = 300
 
 function LiveDetection() {
     const dispatch = useDispatch()
+    const { t } = useTranslation()
     const { data: paintingsResp } = useGetPaintingsQuery()
     // Only paintings with a camera assigned can actually be viewed here.
     const paintingsWithCamera = useMemo(
@@ -27,8 +29,8 @@ function LiveDetection() {
     const [error, setError] = useState(null)
 
     useEffect(() => {
-        dispatch(setPageTitle({ title: "זיהוי בזמן אמת" }))
-    }, [dispatch])
+        dispatch(setPageTitle({ title: t('liveDetection.pageTitle') }))
+    }, [dispatch, t])
 
     // Default to the first painting that has a camera, once the list loads.
     useEffect(() => {
@@ -69,21 +71,21 @@ function LiveDetection() {
     const present = status?.present
     const conf = wheelchair ? status?.confidence : status?.present_confidence
 
-    let label = 'לא זוהה איש'
+    let label = t('liveDetection.noOneDetected')
     let badge = 'badge-ghost'
-    if (wheelchair) { label = 'זוהה כיסא גלגלים'; badge = 'badge-success' }
-    else if (present) { label = 'זוהה אדם'; badge = 'badge-warning' }
+    if (wheelchair) { label = t('liveDetection.wheelchairDetected'); badge = 'badge-success' }
+    else if (present) { label = t('liveDetection.personDetected'); badge = 'badge-warning' }
 
     return (
-        <div className="p-4" dir="rtl">
+        <div className="p-4">
             <div className="flex items-center gap-2 mb-4">
                 <VideoCameraIcon className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl font-bold">מצלמה חיה וזיהוי</h1>
+                <h1 className="text-2xl font-bold">{t('liveDetection.heading')}</h1>
             </div>
 
             {paintingsWithCamera.length > 1 && (
                 <div className="mb-4 max-w-2xl">
-                    <label className="block text-sm font-medium mb-1">ציור</label>
+                    <label className="block text-sm font-medium mb-1">{t('liveDetection.paintingLabel')}</label>
                     <select
                         className="select select-bordered w-full max-w-xs"
                         value={selectedSysId ?? ''}
@@ -98,7 +100,7 @@ function LiveDetection() {
 
             {paintingsWithCamera.length === 0 ? (
                 <div className="alert alert-warning max-w-2xl">
-                    <span>אין ציור עם מצלמה משויכת. יש להגדיר Camera Device בעריכת הציור.</span>
+                    <span>{t('liveDetection.noCameraAssigned')}</span>
                 </div>
             ) : (
                 <div className="card bg-base-100 shadow-xl max-w-2xl">
@@ -106,16 +108,16 @@ function LiveDetection() {
                         <h2 className="card-title">{selectedPainting?.name}</h2>
                         <img
                             src={`${INFERENCE_BASE_URL}/stream${deviceQuery}`}
-                            alt="שידור מצלמה חי"
+                            alt={t('liveDetection.streamAlt')}
                             className="rounded-lg w-full max-w-md border"
                         />
 
                         <div className="mt-2 flex items-center gap-2 text-xs opacity-60">
                             <span
                                 className={`inline-block h-2.5 w-2.5 rounded-full ${status?.camera_ok ? 'bg-success' : 'bg-error'}`}
-                                title={status?.camera_ok ? 'המצלמה תקינה' : 'המצלמה אינה מגיבה'}
+                                title={status?.camera_ok ? t('liveDetection.cameraOk') : t('liveDetection.cameraNotResponding')}
                             />
-                            <span>{status?.camera_ok ? 'המצלמה תקינה' : 'המצלמה מנותקת'}</span>
+                            <span>{status?.camera_ok ? t('liveDetection.cameraOk') : t('liveDetection.cameraDisconnected')}</span>
                             <span>·</span>
                             <span>{(status?.fps ?? 0).toFixed(1)} fps</span>
                         </div>
@@ -123,22 +125,22 @@ function LiveDetection() {
                         <div className={`mt-4 badge badge-lg ${badge}`}>{label}</div>
 
                         <div className="mt-2 text-sm opacity-70">
-                            רמת ביטחון: {((conf || 0) * 100).toFixed(1)}%
+                            {t('liveDetection.confidence')}: {((conf || 0) * 100).toFixed(1)}%
                         </div>
 
                         <div className="mt-3 flex gap-4 text-xs opacity-60">
-                            <span>אדם: {present ? 'כן' : 'לא'}</span>
-                            <span>כיסא גלגלים: {wheelchair ? 'כן' : 'לא'}</span>
+                            <span>{t('liveDetection.personLabel')}: {present ? t('common.yes') : t('liveDetection.no')}</span>
+                            <span>{t('liveDetection.wheelchairLabelShort')}: {wheelchair ? t('common.yes') : t('liveDetection.no')}</span>
                         </div>
 
                         {error && (
                             <div className="alert alert-error mt-4">
-                                <span>שגיאה: {error}</span>
+                                <span>{t('liveDetection.errorPrefix')}: {error}</span>
                             </div>
                         )}
                         {status?.error && (
                             <div className="alert alert-error mt-4">
-                                <span>שגיאת מצלמה: {status.error}</span>
+                                <span>{t('liveDetection.cameraErrorPrefix')}: {status.error}</span>
                             </div>
                         )}
 

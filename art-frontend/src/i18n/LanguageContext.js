@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import en from "./translations/en";
-import he from "./translations/he";
+import enCore from "./translations/en";
+import heCore from "./translations/he";
+import helpAdminEn from "./translations/fragments/helpAdmin.en";
+import helpAdminHe from "./translations/fragments/helpAdmin.he";
+import helpWorkerEn from "./translations/fragments/helpWorker.en";
+import helpWorkerHe from "./translations/fragments/helpWorker.he";
+
+// Per-page dictionaries live in translations/fragments/ so large static pages
+// (e.g. the Help pages) can be authored/edited independently without every
+// change touching the shared en.js/he.js files. Merged here into one flat
+// lookup table per language.
+const en = { ...enCore, ...helpAdminEn, ...helpWorkerEn };
+const he = { ...heCore, ...helpAdminHe, ...helpWorkerHe };
 
 const dictionaries = { en, he };
 const STORAGE_KEY = "language";

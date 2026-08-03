@@ -1,4 +1,4 @@
-export default {
+const helpWorker_en = {
   "helpWorker.pageTitle": "How to Use the System",
 
   // Shared / reused UI labels
@@ -189,3 +189,5 @@ export default {
   "helpWorker.section5.troubleshoot.heightAdjust.label": "Height Adjust:",
   "helpWorker.section5.troubleshoot.heightAdjust.body": "Ensure the motor and microcontroller are functioning. Restart the system if needed.",
 };
+
+export default helpWorker_en;

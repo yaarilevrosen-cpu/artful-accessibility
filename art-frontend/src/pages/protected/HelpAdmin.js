@@ -40,10 +40,10 @@ function InternalPage() {
         <p className="mt-4">{t('helpAdmin.section1.intro')}</p>
         <ul className="list-decimal list-inside mb-4">
             <li>{t('helpAdmin.section1.step1.pre')}<strong>{t('helpAdmin.common.managePaintings')}</strong>{t('helpAdmin.section1.step1.post')}</li>
-            <li className="flex items-center space-x-4">
+            <li className="flex items-center gap-4">
                 <span>{t('helpAdmin.section1.step2.pre')}<strong>{t('helpAdmin.section1.step2.strong')}</strong>{t('helpAdmin.section1.step2.post')}</span>
                 <button
-                    className="bg-blue-500 text-black font-medium px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 transition duration-200 ease-in-out flex items-center space-x-2"
+                    className="bg-blue-500 text-black font-medium px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 transition duration-200 ease-in-out flex items-center gap-2"
                 >
                     <span className="text-sm">{t('helpAdmin.section1.addNewButton')}</span>
                     <PlusIcon className="w-4 h-4 text-black" />
@@ -123,7 +123,7 @@ function InternalPage() {
             <li>
                 {t('helpAdmin.section2.step2.pre')}<strong>{t('helpAdmin.section2.step2.strong')}</strong>{t('helpAdmin.section2.step2.post')}
                 <button
-                    className="flex items-center space-x-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline mt-2"
+                    className="flex items-center gap-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline mt-2"
                     onClick={() => console.log("Edit button clicked")}
                 >
                     <PencilIcon className="w-5 h-5" />
@@ -176,7 +176,7 @@ function InternalPage() {
             <li>
                 {t('helpAdmin.section3.step2.pre')}<strong>{t('helpAdmin.common.delete')}</strong>{t('helpAdmin.section3.step2.post')}
                 <button
-                    className="flex items-center space-x-2 text-red-500 border border-red-500 rounded-md px-3 py-1 hover:bg-red-100 transition duration-200 underline mt-2"
+                    className="flex items-center gap-2 text-red-500 border border-red-500 rounded-md px-3 py-1 hover:bg-red-100 transition duration-200 underline mt-2"
                 >
                     <TrashIcon className="w-5 h-5" />
                     <span>{t('helpAdmin.common.delete')}</span>
@@ -247,7 +247,7 @@ function InternalPage() {
             <li>
                 {t('helpAdmin.section4.step2.pre')}<strong>{t('helpAdmin.common.info')}</strong>{t('helpAdmin.section4.step2.post')}
                 <button
-                    className="flex items-center space-x-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline "
+                    className="flex items-center gap-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline "
 
                 >
                     <span>{t('helpAdmin.common.info')}</span>
@@ -329,7 +329,7 @@ function InternalPage() {
                 <p className="mt-2">
                     {t('helpAdmin.section5.systemStatus.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={RunningIcon}
                                 alt={t('helpAdmin.common.runningIconAlt')}
@@ -339,7 +339,7 @@ function InternalPage() {
                                 {t('helpAdmin.section5.systemStatus.running')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={StoppedIcon}
                                 alt={t('helpAdmin.common.stoppedIconAlt')}
@@ -356,7 +356,7 @@ function InternalPage() {
 <div className="text-center my-4">
 
         </div>
-        <div className="flex items-center space-x-4 mt-2">
+        <div className="flex items-center gap-4 mt-2">
     {/* Text and Button Image */}
     <p>
         {t('helpAdmin.section5.menuButtonIntro')}
@@ -399,7 +399,7 @@ function InternalPage() {
                 <p className="mt-2">
                     {t('helpAdmin.section5.sensor.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={RunningIcon}
                                 alt={t('helpAdmin.common.runningIconAlt')}
@@ -409,7 +409,7 @@ function InternalPage() {
                                 {t('helpAdmin.section5.sensor.detected')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={StoppedIcon}
                                 alt={t('helpAdmin.common.stoppedIconAlt')}
@@ -444,7 +444,7 @@ function InternalPage() {
                 <p className="mt-2">
                     {t('helpAdmin.section5.wheelchair.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={LoadingIcon}
                                 alt={t('helpAdmin.common.loadingIconAlt')}
@@ -454,7 +454,7 @@ function InternalPage() {
                                 {t('helpAdmin.section5.wheelchair.detecting')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={RunningIcon}
                                 alt={t('helpAdmin.common.runningIconAlt')}
@@ -464,7 +464,7 @@ function InternalPage() {
                                 {t('helpAdmin.section5.wheelchair.detected')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={StoppedIcon}
                                 alt={t('helpAdmin.common.stoppedIconAlt')}
@@ -482,7 +482,7 @@ function InternalPage() {
                 <p className="mt-2">
                     {t('helpAdmin.section5.heightAdjust.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={RunningIcon}
                                 alt={t('helpAdmin.common.runningIconAlt')}
@@ -492,7 +492,7 @@ function InternalPage() {
                                 {t('helpAdmin.section5.heightAdjust.inProgress')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={StoppedIcon}
                                 alt={t('helpAdmin.common.stoppedIconAlt')}
@@ -590,7 +590,7 @@ function InternalPage() {
   <strong>{t('helpAdmin.section6.downloadReports.label')}</strong> {t('helpAdmin.section6.downloadReports.body')}
   <button
 
-                                className="bg-gradient-to-r from-blue-400 to-blue-600 text-black px-6 py-3 rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 flex items-center space-x-2 transition duration-300 ease-in-out transform hover:scale-105"
+                                className="bg-gradient-to-r from-blue-400 to-blue-600 text-black px-6 py-3 rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 flex items-center gap-2 transition duration-300 ease-in-out transform hover:scale-105"
                             >
                                 <span className="font-medium">{t('helpAdmin.section6.downloadReports.buttonLabel')}</span>
                                 <ArrowDownTrayIcon className="w-5 h-5" />

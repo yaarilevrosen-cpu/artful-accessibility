@@ -38,10 +38,10 @@ function InternalPage() {
         <p className="mt-4">{t('helpWorker.section1.intro')}</p>
         <ul className="list-decimal list-inside mb-4">
             <li>{t('helpWorker.section1.step1.pre')}<strong>{t('helpWorker.common.managePaintings')}</strong>{t('helpWorker.section1.step1.post')}</li>
-            <li className="flex items-center space-x-4">
+            <li className="flex items-center gap-4">
                 <span>{t('helpWorker.section1.step2.pre')}<strong>"{t('helpWorker.common.addNew')}"</strong>{t('helpWorker.section1.step2.post')}</span>
                 <button
-                    className="bg-blue-500 text-black font-medium px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 transition duration-200 ease-in-out flex items-center space-x-2"
+                    className="bg-blue-500 text-black font-medium px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 transition duration-200 ease-in-out flex items-center gap-2"
                 >
                     <span className="text-sm">{t('helpWorker.common.addNew')}</span>
                     <PlusIcon className="w-4 h-4 text-black" />
@@ -118,7 +118,7 @@ function InternalPage() {
             <li>
                 {t('helpWorker.section2.step2.pre')}<strong>{t('helpWorker.common.edit')}</strong>{t('helpWorker.section2.step2.post')}
                 <button
-                    className="flex items-center space-x-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline mt-2"
+                    className="flex items-center gap-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline mt-2"
                     onClick={() => console.log("Edit button clicked")}
                 >
                     <PencilIcon className="w-5 h-5" />
@@ -171,7 +171,7 @@ function InternalPage() {
             <li>
                 {t('helpWorker.section3.step2.pre')}<strong>{t('helpWorker.common.delete')}</strong>{t('helpWorker.section3.step2.post')}
                 <button
-                    className="flex items-center space-x-2 text-red-500 border border-red-500 rounded-md px-3 py-1 hover:bg-red-100 transition duration-200 underline mt-2"
+                    className="flex items-center gap-2 text-red-500 border border-red-500 rounded-md px-3 py-1 hover:bg-red-100 transition duration-200 underline mt-2"
                 >
                     <TrashIcon className="w-5 h-5" />
                     <span>{t('helpWorker.common.delete')}</span>
@@ -241,7 +241,7 @@ function InternalPage() {
             <li>
                 {t('helpWorker.section4.step2.pre')}<strong>{t('helpWorker.common.info')}</strong>{t('helpWorker.section4.step2.post')}
                 <button
-                    className="flex items-center space-x-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline "
+                    className="flex items-center gap-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline "
 
                 >
                     <span>{t('helpWorker.common.info')}</span>
@@ -322,7 +322,7 @@ function InternalPage() {
                 <p className="mt-2">
                     {t('helpWorker.section5.systemStatus.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={RunningIcon}
                                 alt={t('helpWorker.common.runningIconAlt')}
@@ -332,7 +332,7 @@ function InternalPage() {
                                 {t('helpWorker.section5.systemStatus.running')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                             <img
                                 src={StoppedIcon}
                                 alt={t('helpWorker.common.stoppedIconAlt')}
@@ -349,7 +349,7 @@ function InternalPage() {
 <div className="text-center my-4">
 
         </div>
-        <div className="flex items-center space-x-4 mt-2">
+        <div className="flex items-center gap-4 mt-2">
     {/* Text and Button Image */}
     <p>
         {t('helpWorker.section5.menuIntro')}
@@ -392,7 +392,7 @@ function InternalPage() {
                 <p className="mt-2">
                     {t('helpWorker.section5.sensor.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                         <img
             src={RunningIcon}
             alt={t('helpWorker.common.runningIconAlt')}
@@ -402,7 +402,7 @@ function InternalPage() {
                                 {t('helpWorker.section5.sensor.detected')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                         <img
             src={StoppedIcon}
             alt={t('helpWorker.common.stoppedIconAlt')}
@@ -439,7 +439,7 @@ function InternalPage() {
                 <p className="mt-2">
                     {t('helpWorker.section5.wheelchair.intro')}
 
-                    <li className="flex items-center space-x-2">
+                    <li className="flex items-center gap-2">
                         <img
             src={LoadingIcon}
             alt={t('helpWorker.common.loadingIconAlt')}
@@ -450,7 +450,7 @@ function InternalPage() {
                             </span>
                         </li>
                     <ul className="list-disc list-inside pl-6 mt-2">
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                         <img
             src={RunningIcon}
             alt={t('helpWorker.common.runningIconAlt')}
@@ -460,7 +460,7 @@ function InternalPage() {
                                 {t('helpWorker.section5.wheelchair.detected')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                         <img
             src={StoppedIcon}
             alt={t('helpWorker.common.stoppedIconAlt')}
@@ -478,7 +478,7 @@ function InternalPage() {
                 <p className="mt-2">
                     {t('helpWorker.section5.heightAdjust.intro')}
                     <ul className="list-disc list-inside pl-6 mt-2">
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                         <img
             src={RunningIcon}
             alt={t('helpWorker.common.runningIconAlt')}
@@ -488,7 +488,7 @@ function InternalPage() {
                                 {t('helpWorker.section5.heightAdjust.inProgress')}
                             </span>
                         </li>
-                        <li className="flex items-center space-x-2">
+                        <li className="flex items-center gap-2">
                         <img
             src={StoppedIcon}
             alt={t('helpWorker.common.stoppedIconAlt')}

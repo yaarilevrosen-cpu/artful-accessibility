@@ -18,16 +18,18 @@ import  RunningIcon  from "./icons/running.svg";
 import  LoadingIcon  from "./icons/loading.svg";
 import SelectBox from "../../components/Input/SelectBox";
 import CustomDropdown from "../../components/Input/CustomDropdown";
+import { useTranslation } from "../../i18n";
 
 const TopSideButtons = ({ fetchLeads }) => {
     const dispatch = useDispatch();
+    const { t } = useTranslation();
 
     const openAddNewLeadModal = () => {
         dispatch(
             openModal({
-              title: "Add New Painting",
+              title: t('leads.addNewPaintingTitle'),
               bodyType: MODAL_BODY_TYPES.LEAD_ADD_NEW,
-             
+
             })
           );
     };
@@ -35,11 +37,11 @@ const TopSideButtons = ({ fetchLeads }) => {
     return (
       <div className="inline-block float-right">
     <button
-        className="bg-blue-500 text-black  font-medium px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 transition duration-200 ease-in-out flex items-center space-x-2"
+        className="bg-blue-500 text-black  font-medium px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 transition duration-200 ease-in-out flex items-center gap-2"
         onClick={openAddNewLeadModal}
     >
 
-        <span className="text-sm">Add New</span>
+        <span className="text-sm">{t('leads.addNew')}</span>
         <PlusIcon className="w-4 h-4 text-black" />
     </button>
 </div>
@@ -50,6 +52,7 @@ const TopSideButtons = ({ fetchLeads }) => {
 
 
 function Leads() {
+    const { t } = useTranslation();
     const [leads, setLeads] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteMessage, setDeleteMessage] = useState("");
@@ -105,9 +108,14 @@ function Leads() {
                         }else
                         return {
                             ...painting,
-                            wheelchair: latestMessage.wheelchair,
-                            sensor: latestMessage.sensor,
-                            height_adjust: latestMessage.height_adjust,
+                            wheelchair: latestMessage.wheelchair !== undefined ? latestMessage.wheelchair : painting.wheelchair,
+                            sensor: latestMessage.sensor !== undefined ? latestMessage.sensor : painting.sensor,
+                            height_adjust: latestMessage.height_adjust !== undefined ? latestMessage.height_adjust : painting.height_adjust,
+                            // demo:true/false broadcasts (see mqttService.runDemo) carry only
+                            // {sys_id, demo, height_adjust} - without the fallbacks above this
+                            // branch would clobber wheelchair/sensor with undefined on every
+                            // demo tick.
+                            demo: latestMessage.demo !== undefined ? latestMessage.demo : painting.demo,
                         };
                     }
                     return painting; // Return unchanged painting
@@ -121,7 +129,7 @@ function Leads() {
 
     function editModalOpen(data){
         console.log(data)
-        dispatch(openModal({ title: "Edit Painting", bodyType: MODAL_BODY_TYPES.PAINTING_EDIT , 
+        dispatch(openModal({ title: t('leads.editPaintingTitle'), bodyType: MODAL_BODY_TYPES.PAINTING_EDIT ,
             extraObject: data
         }));
        
@@ -140,7 +148,7 @@ function Leads() {
             if(res.success){
                 dispatch(
                     showNotification({
-                        message: "Painting deleted successfully",
+                        message: t('leads.deleteSuccess'),
                         status: 1,
                     })
                 );
@@ -155,7 +163,7 @@ function Leads() {
             console.error(error);
             dispatch(
                 showNotification({
-                    message: "Failed to delete painting. Please try again.",
+                    message: t('leads.deleteFailure'),
                     status: 0,
                 })
             );
@@ -193,13 +201,31 @@ function Leads() {
         try {
             await axios.post(`/paintings/${sys_id}/height`, { value });
             dispatch(showNotification({
-                message: value === 1 ? "פקודת הורדה נשלחה" : "פקודת העלאה נשלחה",
+                message: value === 1 ? t('leads.lowerCommandSent') : t('leads.raiseCommandSent'),
                 status: 1,
             }));
         } catch (e) {
-            dispatch(showNotification({ message: "שליחת הפקודה נכשלה", status: 0 }));
+            dispatch(showNotification({ message: t('leads.commandFailed'), status: 0 }));
         } finally {
             setHeightBusy(null);
+        }
+    };
+
+    const [demoBusy, setDemoBusy] = useState(null);
+
+    const handleDemo = async (sys_id) => {
+        setDemoBusy(sys_id);
+        try {
+            await axios.post(`/paintings/${sys_id}/demo`);
+            dispatch(showNotification({ message: t('leads.demoStarted'), status: 1 }));
+        } catch (e) {
+            const alreadyRunning = e?.response?.status === 409;
+            dispatch(showNotification({
+                message: alreadyRunning ? t('leads.demoAlreadyRunning') : t('leads.demoFailed'),
+                status: 0,
+            }));
+        } finally {
+            setDemoBusy(null);
         }
     };
 
@@ -215,7 +241,7 @@ function Leads() {
     
 
     {/* Define Status Inline */}
-    const Status = ({ icon, label, explanation , sys_id, status}) => {
+    const Status = ({ icon, label, explanation , sys_id, status, isSystemStatus}) => {
         const isOn = status === "Active";
 
            // Function to handle API calls based on the selected option
@@ -228,8 +254,6 @@ function Leads() {
         }
     };
 
-        // Check if the label is "System Status"
-        const isSystemStatus = label === "System Status";
         const RestartIcon = () => (
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
@@ -265,14 +289,14 @@ function Leads() {
                                 isOn ? "bg-emerald-600 text-white border-emerald-600"
                                      : "bg-white text-gray-500 border-gray-300 hover:bg-emerald-50"
                             }`}
-                        >פועל</button>
+                        >{t('common.on')}</button>
                         <button
                             onClick={() => setPower(false)}
                             className={`px-3 py-1 text-xs rounded-md border transition ${
                                 !isOn ? "bg-gray-600 text-white border-gray-600"
                                       : "bg-white text-gray-500 border-gray-300 hover:bg-gray-100"
                             }`}
-                        >כבוי</button>
+                        >{t('common.off')}</button>
                     </div>
                 )}
             </div>
@@ -283,14 +307,14 @@ function Leads() {
     return (
         <>
             <TitleCard
-                title="Current Paintings"
+                title={t('leads.title')}
                 topMargin="mt-2"
                 TopSideButtons={<TopSideButtons />}
             >
-                
+
                 {loading ? (
-                    <p>Loading paintings...</p>
-                    
+                    <p>{t('leads.loadingPaintings')}</p>
+
                 ) : (
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -300,9 +324,14 @@ function Leads() {
                             className="card bg-base-100 shadow-xl  flex flex-col justify-between
                              p-4 bg-white rounded-lg shadow-md space-y-2 dark:bg-[#1f2937]  dark: text-white">
                             <div className={ "text-black  dark:text-white" }>
+                                {lead.demo && (
+                                    <div className="mb-2 text-center text-sm font-bold text-white bg-purple-600 rounded-md py-1 px-2 animate-pulse">
+                                        {t('leads.demoBanner')}
+                                    </div>
+                                )}
                                 <img
                                     src={lead.photo || "/nophoto.jpg"}
-                                    alt={lead.photo ? `${lead.name}'s painting` : "No photo available"}
+                                    alt={lead.photo ? t('leads.photoAlt', { name: lead.name }) : t('leads.noPhotoAlt')}
                                     style={{
                                         height: "200px",
                                         objectFit: "cover",
@@ -328,54 +357,55 @@ function Leads() {
                                   {/* System Status */}
                                     <Status
                                       icon={lead.status === "Active" ? RunningIcon : StoppedIcon}
-                                      label="System Status"
+                                      label={t('leads.status.systemLabel')}
+                                      isSystemStatus
                                       explanation={
                                         lead.status === "Active"
-                                          ? "The system is online."
-                                          : "The system is turned off."
+                                          ? t('leads.status.systemOnline')
+                                          : t('leads.status.systemOffline')
                                       }
                                       sys_id = {lead.sys_id}
+                                      status = {lead.status}
                                     />
 
                                           {/* Other Status  */}
                                           <Status
                                             icon={lead.sensor ? RunningIcon : StoppedIcon}
-                                            label="נוכחות"
-                                            explanation={lead.sensor ? "אדם מזוהה מול הציור." : "אין אדם מול הציור."}
+                                            label={t('leads.status.presenceLabel')}
+                                            explanation={lead.sensor ? t('leads.status.presenceDetected') : t('leads.status.presenceNotDetected')}
                                           />
                                           <Status
                                             icon={
                                                 (() => {
-                                                    console.log('lead.wheelchair', lead.wheelchair)
                                                     switch (lead.wheelchair) {
                                                         case 0:
                                                           return   StoppedIcon ;
                                                         case 1:
-                                                            return LoadingIcon ; 
+                                                            return LoadingIcon ;
                                                         case 2:
-                                                            return RunningIcon ; 
-                                                        
+                                                            return RunningIcon ;
+
                                                     }
                                                 })()
                                             }
-                                            label="Wheelchair"
+                                            label={t('leads.status.wheelchairLabel')}
                                             explanation={
                                                 (() => {
                                                     switch (lead.wheelchair) {
                                                         case 0:
-                                                            return "No wheelchair user detected.";
+                                                            return t('leads.status.wheelchairNone');
                                                         case 1:
-                                                            return "Detecting a wheelchair user.";
+                                                            return t('leads.status.wheelchairDetecting');
                                                         case 2:
-                                                            return "A person in a wheelchair has been detected.";
+                                                            return t('leads.status.wheelchairDetected');
                                                     }
                                                 })()
                                             }
                                           />
                                           <Status
                                             icon={lead.height_adjust ? RunningIcon : StoppedIcon}
-                                            label="Height Adjust"
-                                            explanation={lead.height_adjust ? "Adjusting the height for optimal visibility." : "No height adjustments currently in progress."}
+                                            label={t('leads.status.heightAdjustLabel')}
+                                            explanation={lead.height_adjust ? t('leads.status.heightAdjusting') : t('leads.status.heightAdjustIdle')}
                                           />
 
                                         </div>
@@ -388,44 +418,52 @@ function Leads() {
                                     onClick={() => handleHeight(lead.sys_id, 1)}
                                     disabled={heightBusy !== null}
                                 >
-                                    &#8595; הורד ציור
+                                    &#8595; {t('leads.lowerButton')}
                                 </button>
                                 <button
                                     className="flex-1 text-sm border border-emerald-600 text-emerald-700 rounded-md py-1 hover:bg-emerald-50 transition disabled:opacity-40"
                                     onClick={() => handleHeight(lead.sys_id, 0)}
                                     disabled={heightBusy !== null}
                                 >
-                                    &#8593; העלה ציור
+                                    &#8593; {t('leads.raiseButton')}
+                                </button>
+                                <button
+                                    className="flex-1 text-sm border border-purple-500 text-purple-600 rounded-md py-1 hover:bg-purple-50 transition disabled:opacity-40"
+                                    onClick={() => handleDemo(lead.sys_id)}
+                                    disabled={demoBusy !== null || !!lead.demo}
+                                    title={t('leads.demoButtonHint')}
+                                >
+                                    {lead.demo ? t('leads.demoRunning') : t('leads.demoButton')}
                                 </button>
                             </div>
 
                             <div className="flex justify-between items-center p-4 border-t">
-                                                <div className="border-r pr-4">
+                                                <div className="border-e pe-4">
                                                     <button
-                                                        className="flex items-center space-x-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline"
+                                                        className="flex items-center gap-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline"
                                                         onClick={() => handleEditLead(lead)}
                                                     >
                                                         <PencilIcon className="w-5 h-5" />
-                                                        <span>Edit</span>
+                                                        <span>{t('common.edit')}</span>
                                                     </button>
                                                 </div>
-                                                <div className="border-r pr-4">
+                                                <div className="border-e pe-4">
                                                     <button
-                                                        className="flex items-center space-x-2 text-red-500 border border-red-500 rounded-md px-3 py-1 hover:bg-red-100 transition duration-200 underline"
+                                                        className="flex items-center gap-2 text-red-500 border border-red-500 rounded-md px-3 py-1 hover:bg-red-100 transition duration-200 underline"
                                                         onClick={() => setConfirmDeleteIndex(index)}
                                                         disabled={isDeleting}
                                                     >
                                                         <TrashIcon className="w-5 h-5" />
-                                                        <span>{isDeleting ? "Deleting..." : "Delete"}</span>
+                                                        <span>{isDeleting ? t('common.deleting') : t('common.delete')}</span>
                                                     </button>
                                                 </div>
                                                 <div >
                                                     <button
-                                                        className="flex items-center space-x-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline"
+                                                        className="flex items-center gap-2 text-blue-500 border border-blue-500 rounded-md px-3 py-1 hover:bg-blue-100 transition duration-200 underline"
                                                         onClick={() => handleMoreInfo(lead)}
                                                     >
 
-                                                        <span>Info</span>
+                                                        <span>{t('common.info')}</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -455,10 +493,10 @@ function Leads() {
                                                                         </button>
 
                                                                         {/* Modal Title */}
-                                                                        <h3 className="font-semibold text-2xl pb-4">Confirm Deletion</h3>
+                                                                        <h3 className="font-semibold text-2xl pb-4">{t('leads.confirmDeleteTitle')}</h3>
 
                                                                         {/* Modal Content */}
-                                                                        <p className="text-lg mb-6">Are you sure you want to delete this painting?</p>
+                                                                        <p className="text-lg mb-6">{t('leads.confirmDeleteBody')}</p>
 
                                                                         {/* Action Buttons */}
                                                                   <div className="flex justify-center gap-4">
@@ -467,7 +505,7 @@ function Leads() {
                                                                       className="border border-gray-300 text-gray-700 py-2 px-6   font-medium rounded-md hover:bg-gray-100 transition duration-200"
                                                                       onClick={() => setConfirmDeleteIndex(null)}
                                                                     >
-                                                                      Cancel
+                                                                      {t('common.cancel')}
                                                                     </button>
 
                                                                     {/* Confirm Button */}
@@ -475,7 +513,7 @@ function Leads() {
                                                                       className="bg-red-500 text-blsck py-2 px-6   font-medium rounded-md hover:bg-red-600 transition duration-200"
                                                                       onClick={() => handleDeleteLead(confirmDeleteIndex)}
                                                                     >
-                                                                      Confirm
+                                                                      {t('common.confirm')}
                                                                     </button>
                                                                   </div>
                                                                     </div>
@@ -519,7 +557,7 @@ function Leads() {
     {/* Larger Image */}
     <img
       src={modalImage}
-      alt="Larger painting view"
+      alt={t('leads.largerViewAlt')}
       style={{
         width: "auto",       // Original aspect ratio
         height: "90vh",      // Make it nearly as tall as the viewport

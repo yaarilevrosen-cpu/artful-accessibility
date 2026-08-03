@@ -1,4 +1,4 @@
-export default {
+const helpWorker_he = {
   "helpWorker.pageTitle": "איך להשתמש במערכת",
 
   // תוויות משותפות המשמשות במספר מקומות
@@ -189,3 +189,5 @@ export default {
   "helpWorker.section5.troubleshoot.heightAdjust.label": "התאמת גובה:",
   "helpWorker.section5.troubleshoot.heightAdjust.body": "ודאו שהמנוע והבקר פועלים כראוי. הפעילו מחדש את המערכת במידת הצורך.",
 };
+
+export default helpWorker_he;

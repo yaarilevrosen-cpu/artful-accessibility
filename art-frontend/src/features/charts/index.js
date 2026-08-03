@@ -8,9 +8,11 @@ import ArrowDownTrayIcon from '@heroicons/react/24/outline/ArrowDownTrayIcon';
 import ClockIcon from '@heroicons/react/24/outline/ClockIcon';
 import EyeIcon from '@heroicons/react/24/outline/EyeIcon';
 import { ArchiveBoxIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from '../../i18n';
 
 function Charts() {
     const navigate = useNavigate(); // Initialize useNavigate
+    const { t } = useTranslation();
     const { data, isLoading, isError } = useGetPaintingStatsQuery();
     const [dateValue, setDateValue] = useState({
         startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Start of the current month
@@ -48,7 +50,7 @@ function Charts() {
     );
 
     const downloadCSV = () => {
-        const csvHeaders = ['Artwork Name,Number of Views,Time Viewed (Seconds)'];
+        const csvHeaders = [t('chartsPage.csv.headers')];
         const csvRows = paintingData.map((painting) =>
             ` ${painting.name},${painting.totalViews},${painting.totalViewDuration}`
         );
@@ -65,20 +67,20 @@ function Charts() {
         <div className="p-6 bg-gray-100 min-h-screen">
             {/* Header Section */}
             <header className="flex flex-col lg:flex-row lg:justify-between items-center mb-8">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-4">
                     
                 </div>
 
-                <div className="flex items-center space-x-4 mt-4 lg:mt-0 w-full">
-  <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-4 mt-4 lg:mt-0 w-full">
+  <div className="flex items-center gap-4">
     <label htmlFor="date-range" className="text-gray-700 font-bold text-lg whitespace-nowrap">
-      Select Date:
+      {t('chartsPage.selectDate')}
     </label>
     <Datepicker
   value={dateValue}
   theme="light"
-  inputClassName="input input-bordered w-full lg:w-72 text-lg rounded-l-lg"
-  toggleClassName="absolute bg-blue-500 hover:bg-blue-700 text-black rounded-r-lg top-0 right-0 h-full px-4 focus:outline-none transition duration-200 disabled:opacity-50"
+  inputClassName="input input-bordered w-full lg:w-72 text-lg rounded-s-lg"
+  toggleClassName="absolute bg-blue-500 hover:bg-blue-700 text-black rounded-e-lg top-0 end-0 h-full px-4 focus:outline-none transition duration-200 disabled:opacity-50"
   showShortcuts={true}
   popoverDirection="down"
   onChange={handleDatePickerValueChange}
@@ -86,42 +88,42 @@ function Charts() {
   configs={{
     shortcuts: {
       today: {
-        text: "Today",
+        text: t('chartsPage.shortcut.today'),
         period: {
           start: new Date(),
           end: new Date(),
         },
       },
       yesterday: {
-        text: "Yesterday",
+        text: t('chartsPage.shortcut.yesterday'),
         period: {
           start: new Date(new Date().setDate(new Date().getDate() - 1)),
           end: new Date(new Date().setDate(new Date().getDate() - 1)),
         },
       },
       last7Days: {
-        text: "Last 7 Days",
+        text: t('chartsPage.shortcut.last7Days'),
         period: {
           start: new Date(new Date().setDate(new Date().getDate() - 7)),
           end: new Date(),
         },
       },
       thisMonth: {
-        text: "This Month",
+        text: t('chartsPage.shortcut.thisMonth'),
         period: {
           start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
           end: new Date(),
         },
       },
       lastMonth: {
-        text: "Last Month",
+        text: t('chartsPage.shortcut.lastMonth'),
         period: {
           start: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
           end: new Date(new Date().getFullYear(), new Date().getMonth(), 0),
         },
       },
       thisYear: {
-        text: "This Year",
+        text: t('chartsPage.shortcut.thisYear'),
         period: {
           start: new Date(new Date().getFullYear(), 0, 1),
           end: new Date(),
@@ -139,16 +141,15 @@ function Charts() {
             {/* Explanation Section */}
             <div className="mt-4 mb-8 text-center">
                 <p className="text-gray-600 text-lg">
-                    This page provides detailed statistics and insights about the paintings currently in the system. 
-                    Analyze their engagement, viewing patterns, and performance over time to better understand their impact.
+                    {t('chartsPage.explanation')}
                 </p>
             </div>
 
             {/* Content Section */}
-            {isLoading && <div className="text-center text-lg">Loading painting stats...</div>}
-            {isError && <div className="text-red-500 text-center">Error loading painting stats. Please try again later.</div>}
+            {isLoading && <div className="text-center text-lg">{t('chartsPage.loading')}</div>}
+            {isError && <div className="text-red-500 text-center">{t('chartsPage.error')}</div>}
             {!isLoading && !isError && paintingData.length === 0 && (
-                <div className="text-center text-gray-500">No painting stats available.</div>
+                <div className="text-center text-gray-500">{t('chartsPage.noStats')}</div>
             )}
 
             {!isLoading && !isError && paintingData.length > 0 && (
@@ -157,11 +158,10 @@ function Charts() {
                         {/* Longest Viewed Painting */}
                         <div className="bg-white shadow-lg rounded-lg p-6 border-t-4 flex items-center">
                             <ClockIcon className="w-10 h-10 text-black bg-gray-200 p-2 rounded-full" />
-                            <div className="ml-4">
-                                <h2 className="text-2xl font-bold text-gray-800">Longest Viewed Painting</h2>
+                            <div className="ms-4">
+                                <h2 className="text-2xl font-bold text-gray-800">{t('chartsPage.longestViewed')}</h2>
                                 <p className="text-gray-600">
-                                    <strong>{topDurationPainting.name}</strong> with
-                                    <span className="text-green-500 font-bold"> {topDurationPainting.totalViewDuration} seconds</span>.
+                                    <strong>{topDurationPainting.name}</strong> {t('chartsPage.withDuration', { duration: topDurationPainting.totalViewDuration })}
                                 </p>
                             </div>
                         </div>
@@ -169,11 +169,10 @@ function Charts() {
                         {/* Most Viewed Painting */}
                         <div className="bg-white shadow-md rounded-lg p-6 border-t-4 flex items-center">
                             <EyeIcon className="w-10 h-10 text-black bg-gray-200 p-2 rounded-full" />
-                            <div className="ml-4">
-                                <h2 className="text-2xl font-bold text-gray-800">Most Viewed Painting</h2>
+                            <div className="ms-4">
+                                <h2 className="text-2xl font-bold text-gray-800">{t('chartsPage.mostViewed')}</h2>
                                 <p className="text-gray-600 text-lg">
-                                    <strong>{topViewsPainting.name}</strong> with
-                                    <span className="text-blue-500 font-bold"> {topViewsPainting.totalViews} views</span>.
+                                    <strong>{topViewsPainting.name}</strong> {t('chartsPage.withViews', { views: topViewsPainting.totalViews })}
                                 </p>
                             </div>
                         </div>
@@ -186,22 +185,22 @@ function Charts() {
 
                     <div className="bg-white shadow-md rounded-lg p-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold text-gray-800">Painting Statistics</h2>
+                            <h2 className="text-xl font-semibold text-gray-800">{t('chartsPage.statisticsTitle')}</h2>
                             <button
                                 onClick={downloadCSV}
-                                className="bg-gradient-to-r from-blue-400 to-blue-600 text-black px-6 py-3 rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 flex items-center space-x-2 transition duration-300 ease-in-out transform hover:scale-105"
+                                className="bg-gradient-to-r from-blue-400 to-blue-600 text-black px-6 py-3 rounded-lg shadow-lg hover:from-blue-500 hover:to-blue-700 flex items-center gap-2 transition duration-300 ease-in-out transform hover:scale-105"
                             >
-                                <span className="font-medium">Download Report as CSV</span>
+                                <span className="font-medium">{t('chartsPage.downloadCsv')}</span>
                                 <ArrowDownTrayIcon className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <table className="table-auto w-full text-left border-collapse border border-gray-200">
+                        <table className="table-auto w-full text-start border-collapse border border-gray-200">
                             <thead>
                                 <tr className="bg-gray-100 text-gray-800">
-                                    <th className="border border-gray-300 px-2 py-2">Painting Name</th>
-                                    <th className="border border-gray-300 px-2 py-2">Number of Views</th>
-                                    <th className="border border-gray-300 px-2 py-2">Time Viewed (Seconds)</th>
+                                    <th className="border border-gray-300 px-2 py-2">{t('chartsPage.table.name')}</th>
+                                    <th className="border border-gray-300 px-2 py-2">{t('chartsPage.table.views')}</th>
+                                    <th className="border border-gray-300 px-2 py-2">{t('chartsPage.table.duration')}</th>
                                 </tr>
                             </thead>
                             <tbody>

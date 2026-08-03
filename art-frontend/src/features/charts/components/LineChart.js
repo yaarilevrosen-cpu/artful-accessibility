@@ -9,7 +9,8 @@ import {
   } from 'chart.js';
   import { Bar } from 'react-chartjs-2';
   import TitleCard from '../../../components/Cards/TitleCard';
-  
+  import { useTranslation } from '../../../i18n';
+
   ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -18,8 +19,9 @@ import {
     Tooltip,
     Legend
   );
-  
+
   function StackBarChart({ data, dateRange }) {
+    const { t } = useTranslation();
     const options = {
       responsive: true,
       indexAxis: 'y', // Switch x and y axes
@@ -35,14 +37,14 @@ import {
         x: {
           title: {
             display: true,
-            text: "Total Duration (seconds)", // Update x-axis title
+            text: t('chart.axis.totalDuration'), // Update x-axis title
           },
           stacked: true, // Enable stacking on x-axis
         },
         y: {
           title: {
             display: true,
-            text: "Painting Name", // Update y-axis title
+            text: t('chart.axis.paintingName'), // Update y-axis title
           },
           stacked: true, // Enable stacking on y-axis
         },
@@ -68,7 +70,7 @@ import {
       labels,
       datasets: [
         {
-          label: 'Total Duration (seconds)',
+          label: t('chart.axis.totalDuration'),
           data: totalDurations,
           backgroundColor: 'rgba(53, 162, 235, 0.5)',
           borderColor: 'rgb(53, 162, 235)',
@@ -76,9 +78,9 @@ import {
         },
       ],
     };
-  
+
     return (
-      <TitleCard title={"Total Time Viewed"}>
+      <TitleCard title={t('chart.totalTimeViewed')}>
         <Bar data={chartData} options={options} />
       </TitleCard>
     );

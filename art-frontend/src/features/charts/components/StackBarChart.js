@@ -9,10 +9,12 @@ import {
   } from 'chart.js';
   import { Bar } from 'react-chartjs-2';
   import TitleCard from '../../../components/Cards/TitleCard';
-  
+  import { useTranslation } from '../../../i18n';
+
   ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-  
+
   function StackBarChart({ data, dateRange }) {
+    const { t } = useTranslation();
     const options = {
         responsive: true,
         indexAxis: 'y', // Switches the axes (horizontal bar chart)
@@ -20,13 +22,13 @@ import {
             x: {
                 title: {
                     display: true,
-                    text: "Total Views", // Update the title for the new x-axis
+                    text: t('chart.axis.totalViews'), // Update the title for the new x-axis
                 },
             },
             y: {
                 title: {
                     display: true,
-                    text: "Painting Name", // Update the title for the new y-axis
+                    text: t('chart.axis.paintingName'), // Update the title for the new y-axis
                 },
             },
         },
@@ -51,7 +53,7 @@ import {
         labels,
         datasets: [
             {
-                label: 'Total Views',
+                label: t('chart.axis.totalViews'),
                 data: totalViews,
                 borderColor: 'rgba(255, 99, 132, 1)', // Soft red for the line
                 backgroundColor: 'rgba(255, 99, 132, 0.2)', // Transparent red for fill
@@ -65,7 +67,7 @@ import {
     };
 
     return (
-        <TitleCard title={"Total Views Over Time"} topMargin="mt-2">
+        <TitleCard title={t('chart.totalViewsOverTime')} topMargin="mt-2">
             <Bar options={options} data={chartData} />
         </TitleCard>
     );
